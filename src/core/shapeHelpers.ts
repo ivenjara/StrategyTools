@@ -52,7 +52,8 @@ export function writePositions(
 
 /**
  * Writes positions with a nudge trick to force PowerPoint for Web to re-render.
- * First moves shapes to a tiny offset, syncs, then moves to the final position.
+ * First moves shapes to a tiny offset, syncs, waits briefly so the web renderer
+ * processes the change, then moves to the final position and syncs again.
  */
 export async function writePositionsWithRefresh(
   shapes: PowerPoint.Shape[],
@@ -67,9 +68,14 @@ export async function writePositionsWithRefresh(
     if (pos) {
       if (pos.left !== undefined) shape.left = pos.left + NUDGE;
       if (pos.top !== undefined) shape.top = pos.top + NUDGE;
+      if (pos.width !== undefined) shape.width = pos.width + NUDGE;
+      if (pos.height !== undefined) shape.height = pos.height + NUDGE;
     }
   }
   await context.sync();
+
+  // Brief pause so the web renderer processes the nudge before the final move
+  await new Promise((resolve) => setTimeout(resolve, 50));
 
   // Step 2: move to the actual final position
   for (const shape of shapes) {
@@ -77,6 +83,8 @@ export async function writePositionsWithRefresh(
     if (pos) {
       if (pos.left !== undefined) shape.left = pos.left;
       if (pos.top !== undefined) shape.top = pos.top;
+      if (pos.width !== undefined) shape.width = pos.width;
+      if (pos.height !== undefined) shape.height = pos.height;
     }
   }
   await context.sync();

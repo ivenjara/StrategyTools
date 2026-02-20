@@ -1,6 +1,7 @@
 /* global PowerPoint */
 
-import { loadSelectedShapes } from "./shapeHelpers";
+import { ShapePositionData } from "./types";
+import { loadSelectedShapes, writePositionsWithRefresh } from "./shapeHelpers";
 
 /** Stored position data from the last copy operation */
 let copiedPosition: { left: number; top: number; width: number; height: number } | null = null;
@@ -29,7 +30,6 @@ export async function copyPosition(): Promise<void> {
 
 /**
  * Paste Position: Applies the copied position to the selected shape(s).
- * Uses nudge trick to force web rendering refresh.
  */
 export async function pastePosition(): Promise<void> {
   if (!copiedPosition) {
@@ -40,25 +40,17 @@ export async function pastePosition(): Promise<void> {
   await PowerPoint.run(async (context) => {
     const { shapes } = await loadSelectedShapes(context, 1);
 
-    // Nudge first to force web re-render
+    const newPositions = new Map<string, Partial<ShapePositionData>>();
     for (const shape of shapes) {
-      shape.left = pos.left + 0.5;
-      shape.top = pos.top + 0.5;
+      newPositions.set(shape.id, { left: pos.left, top: pos.top });
     }
-    await context.sync();
 
-    // Final position
-    for (const shape of shapes) {
-      shape.left = pos.left;
-      shape.top = pos.top;
-    }
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
 /**
  * Paste All: Applies the copied position and size to the selected shape(s).
- * Uses nudge trick to force web rendering refresh.
  */
 export async function pasteSize(): Promise<void> {
   if (!copiedPosition) {
@@ -69,27 +61,23 @@ export async function pasteSize(): Promise<void> {
   await PowerPoint.run(async (context) => {
     const { shapes } = await loadSelectedShapes(context, 1);
 
-    // Nudge first
+    const newPositions = new Map<string, Partial<ShapePositionData>>();
     for (const shape of shapes) {
-      shape.left = pos.left + 0.5;
-      shape.top = pos.top + 0.5;
-      shape.width = pos.width;
-      shape.height = pos.height;
+      newPositions.set(shape.id, {
+        left: pos.left,
+        top: pos.top,
+        width: pos.width,
+        height: pos.height,
+      });
     }
-    await context.sync();
 
-    // Final position
-    for (const shape of shapes) {
-      shape.left = pos.left;
-      shape.top = pos.top;
-    }
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
 /**
  * Paste Size Only: Applies the copied width and height to the selected shape(s).
- * Position stays unchanged — only the size is matched.
+ * Position stays unchanged - only the size is matched.
  */
 export async function pasteSizeOnly(): Promise<void> {
   if (!copiedPosition) {
@@ -100,19 +88,12 @@ export async function pasteSizeOnly(): Promise<void> {
   await PowerPoint.run(async (context) => {
     const { shapes } = await loadSelectedShapes(context, 1);
 
-    // Nudge first to force web re-render
+    const newPositions = new Map<string, Partial<ShapePositionData>>();
     for (const shape of shapes) {
-      shape.width = pos.width + 0.5;
-      shape.height = pos.height + 0.5;
+      newPositions.set(shape.id, { width: pos.width, height: pos.height });
     }
-    await context.sync();
 
-    // Final size
-    for (const shape of shapes) {
-      shape.width = pos.width;
-      shape.height = pos.height;
-    }
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
