@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+
+  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>StrategyTools</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Strategy Tools"/>
+  <Description DefaultValue="Layout and positioning tools for strategy consultants"/>
+  <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
+  <SupportUrl DefaultValue="https://localhost:3000"/>
+
+  <AppDomains>
+    <AppDomain>https://localhost:3000</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Presentation"/>
+  </Hosts>
+
+  <Requirements>
+    <Sets>
+      <Set Name="PowerPointApi" MinVersion="1.5"/>
+    </Sets>
+  </Requirements>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Requirements>
+      <Sets>
+        <Set Name="PowerPointApi" MinVersion="1.5"/>
+      </Sets>
+    </Requirements>
+
+    <Hosts>
+      <Host xsi:type="Presentation">
+        <DesktopFormFactor>
+          <FunctionFile resid="Commands.Url"/>
+
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <CustomTab id="StrategyToolsTab">
+              <Label resid="StrategyToolsTab.Label"/>
+              <InsertAfter>TabHome</InsertAfter>
+
+              <!-- GROUP 1: Swap -->
+              <Group id="SwapGroup">
+                <Label resid="SwapGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+
+                <Control xsi:type="Button" id="SwapPositionBtn">
+                  <Label resid="SwapPosition.Label"/>
+                  <Supertip>
+                    <Title resid="SwapPosition.Label"/>
+                    <Description resid="SwapPosition.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>swapPosition</FunctionName>
+                  </Action>
+                </Control>
+
+                <Control xsi:type="Button" id="SwapHorizontalBtn">
+                  <Label resid="SwapHorizontal.Label"/>
+                  <Supertip>
+                    <Title resid="SwapHorizontal.Label"/>
+                    <Description resid="SwapHorizontal.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>swapHorizontal</FunctionName>
+                  </Action>
+                </Control>
+
+                <Control xsi:type="Button" id="SwapVerticalBtn">
+                  <Label resid="SwapVertical.Label"/>
+                  <Supertip>
+                    <Title resid="SwapVertical.Label"/>
+                    <Description resid="SwapVertical.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>swapVertical</FunctionName>
+                  </Action>
+                </Control>
+
+                <Control xsi:type="Button" id="SwapCenterBtn">
+                  <Label resid="SwapCenter.Label"/>
+                  <Supertip>
+                    <Title resid="SwapCenter.Label"/>
+                    <Description resid="SwapCenter.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>swapCenter</FunctionName>
+                  </Action>
+                </Control>
+              </Group>
+
+              <!-- GROUP 2: Align -->
+              <Group id="AlignGroup">
+                <Label resid="AlignGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+
+                <Control xsi:type="Menu" id="AlignMenu">
+                  <Label resid="AlignMenu.Label"/>
+                  <Supertip>
+                    <Title resid="AlignMenu.Label"/>
+                    <Description resid="AlignMenu.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Items>
+                    <Item id="AlignLeftItem">
+                      <Label resid="AlignLeft.Label"/>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>alignLeft</FunctionName>
+                      </Action>
+                    </Item>
+                    <Item id="AlignCenterItem">
+                      <Label resid="AlignCenter.Label"/>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>alignCenter</FunctionName>
+                      </Action>
+                    </Item>
+                    <Item id="AlignRightItem">
+                      <Label resid="AlignRight.Label"/>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>alignRight</FunctionName>
+                      </Action>
+                    </Item>
+                    <Item id="AlignTopItem">
+                      <Label resid="AlignTop.Label"/>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>alignTop</FunctionName>
+                      </Action>
+                    </Item>
+                    <Item id="AlignMiddleItem">
+                      <Label resid="AlignMiddle.Label"/>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>alignMiddle</FunctionName>
+                      </Action>
+                    </Item>
+                    <Item id="AlignBottomItem">
+                      <Label resid="AlignBottom.Label"/>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>alignBottom</FunctionName>
+                      </Action>
+                    </Item>
+                  </Items>
+                </Control>
+              </Group>
+
+              <!-- GROUP 3: Distribute -->
+              <Group id="DistributeGroup">
+                <Label resid="DistributeGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+
+                <Control xsi:type="Button" id="DistributeHBtn">
+                  <Label resid="DistributeH.Label"/>
+                  <Supertip>
+                    <Title resid="DistributeH.Label"/>
+                    <Description resid="DistributeH.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>distributeHorizontal</FunctionName>
+                  </Action>
+                </Control>
+
+                <Control xsi:type="Button" id="DistributeVBtn">
+                  <Label resid="DistributeV.Label"/>
+                  <Supertip>
+                    <Title resid="DistributeV.Label"/>
+                    <Description resid="DistributeV.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>distributeVertical</FunctionName>
+                  </Action>
+                </Control>
+              </Group>
+
+              <!-- GROUP 4: Task Pane -->
+              <Group id="TaskPaneGroup">
+                <Label resid="TaskPaneGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="ShowTaskPaneBtn">
+                  <Label resid="ShowTaskPane.Label"/>
+                  <Supertip>
+                    <Title resid="ShowTaskPane.Label"/>
+                    <Description resid="ShowTaskPane.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>StrategyToolsPane</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+
+            </CustomTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="StrategyToolsTab.Label" DefaultValue="Strategy Tools"/>
+        <bt:String id="SwapGroup.Label" DefaultValue="Swap"/>
+        <bt:String id="SwapPosition.Label" DefaultValue="Swap Position"/>
+        <bt:String id="SwapHorizontal.Label" DefaultValue="Swap Horizontal"/>
+        <bt:String id="SwapVertical.Label" DefaultValue="Swap Vertical"/>
+        <bt:String id="SwapCenter.Label" DefaultValue="Swap Center"/>
+        <bt:String id="AlignGroup.Label" DefaultValue="Align"/>
+        <bt:String id="AlignMenu.Label" DefaultValue="Align Shapes"/>
+        <bt:String id="AlignLeft.Label" DefaultValue="Align Left"/>
+        <bt:String id="AlignCenter.Label" DefaultValue="Align Center"/>
+        <bt:String id="AlignRight.Label" DefaultValue="Align Right"/>
+        <bt:String id="AlignTop.Label" DefaultValue="Align Top"/>
+        <bt:String id="AlignMiddle.Label" DefaultValue="Align Middle"/>
+        <bt:String id="AlignBottom.Label" DefaultValue="Align Bottom"/>
+        <bt:String id="DistributeGroup.Label" DefaultValue="Distribute"/>
+        <bt:String id="DistributeH.Label" DefaultValue="Distribute H"/>
+        <bt:String id="DistributeV.Label" DefaultValue="Distribute V"/>
+        <bt:String id="TaskPaneGroup.Label" DefaultValue="Panel"/>
+        <bt:String id="ShowTaskPane.Label" DefaultValue="Tools Panel"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="SwapPosition.Tooltip" DefaultValue="Exchange positions of two selected shapes (swaps top-left coordinates)"/>
+        <bt:String id="SwapHorizontal.Tooltip" DefaultValue="Swap only horizontal positions of two shapes, keeping vertical positions unchanged"/>
+        <bt:String id="SwapVertical.Tooltip" DefaultValue="Swap only vertical positions of two shapes, keeping horizontal positions unchanged"/>
+        <bt:String id="SwapCenter.Tooltip" DefaultValue="Swap positions based on center points — ideal for differently-sized objects"/>
+        <bt:String id="AlignMenu.Tooltip" DefaultValue="Align selected shapes along an edge or center"/>
+        <bt:String id="DistributeH.Tooltip" DefaultValue="Distribute 3 or more shapes with even horizontal spacing"/>
+        <bt:String id="DistributeV.Tooltip" DefaultValue="Distribute 3 or more shapes with even vertical spacing"/>
+        <bt:String id="ShowTaskPane.Tooltip" DefaultValue="Open the Strategy Tools panel with all layout tools"/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
