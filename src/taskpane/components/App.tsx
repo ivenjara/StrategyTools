@@ -5,6 +5,7 @@ import Header from "./Header";
 import SwapTools from "./SwapTools";
 import AlignTools from "./AlignTools";
 import DistributeTools from "./DistributeTools";
+import PositionTools from "./PositionTools";
 import StatusBar from "./StatusBar";
 
 interface AppProps {
@@ -55,6 +56,10 @@ const App: React.FC<AppProps> = ({ title }) => {
       <div className={styles.section}>
         <div className={styles.sectionTitle}>Distribute</div>
         <DistributeTools onStatus={handleStatus} />
+      </div>
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>Position</div>
+        <PositionTools onStatus={handleStatus} />
       </div>
       <StatusBar status={status} />
     </div>
