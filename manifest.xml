@@ -6,7 +6,7 @@
   xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
   xsi:type="TaskPaneApp">
 
-  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <Id>230ca798-68dc-47d5-b85b-48cea619fc4b</Id>
   <Version>1.0.0.0</Version>
   <ProviderName>StrategyTools</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
@@ -50,7 +50,6 @@
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <CustomTab id="StrategyToolsTab">
               <Label resid="StrategyToolsTab.Label"/>
-              <InsertAfter>TabHome</InsertAfter>
 
               <!-- GROUP 1: Swap -->
               <Group id="SwapGroup">
@@ -285,6 +284,7 @@
                 </Control>
               </Group>
 
+              <InsertAfter>TabHome</InsertAfter>
             </CustomTab>
           </ExtensionPoint>
         </DesktopFormFactor>
@@ -326,7 +326,7 @@
         <bt:String id="SwapPosition.Tooltip" DefaultValue="Exchange positions of two selected shapes (swaps top-left coordinates)"/>
         <bt:String id="SwapHorizontal.Tooltip" DefaultValue="Swap only horizontal positions of two shapes, keeping vertical positions unchanged"/>
         <bt:String id="SwapVertical.Tooltip" DefaultValue="Swap only vertical positions of two shapes, keeping horizontal positions unchanged"/>
-        <bt:String id="SwapCenter.Tooltip" DefaultValue="Swap positions based on center points — ideal for differently-sized objects"/>
+        <bt:String id="SwapCenter.Tooltip" DefaultValue="Swap positions based on center points - ideal for differently-sized objects"/>
         <bt:String id="AlignMenu.Tooltip" DefaultValue="Align selected shapes along an edge or center"/>
         <bt:String id="DistributeH.Tooltip" DefaultValue="Distribute 3 or more shapes with even horizontal spacing"/>
         <bt:String id="DistributeV.Tooltip" DefaultValue="Distribute 3 or more shapes with even vertical spacing"/>
