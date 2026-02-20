@@ -4,8 +4,9 @@ import { ShapePositionData } from "./types";
 import { loadSelectedShapes, writePositions } from "./shapeHelpers";
 
 /**
- * Swap Position: Exchange the top-left coordinates of exactly 2 shapes.
- * Shape A moves to where Shape B was, and vice versa.
+ * Swap Position: Exchange positions based on center points.
+ * Each shape's center moves to where the other shape's center was,
+ * so shapes land in the exact visual spot regardless of size differences.
  */
 export async function swapPosition(): Promise<void> {
   await PowerPoint.run(async (context) => {
@@ -16,9 +17,23 @@ export async function swapPosition(): Promise<void> {
     }
 
     const [a, b] = data;
+
+    // Calculate center points
+    const aCenterX = a.left + a.width / 2;
+    const aCenterY = a.top + a.height / 2;
+    const bCenterX = b.left + b.width / 2;
+    const bCenterY = b.top + b.height / 2;
+
+    // Move each shape so its center lands at the other's former center
     const newPositions = new Map<string, Partial<ShapePositionData>>();
-    newPositions.set(a.id, { left: b.left, top: b.top });
-    newPositions.set(b.id, { left: a.left, top: a.top });
+    newPositions.set(a.id, {
+      left: bCenterX - a.width / 2,
+      top: bCenterY - a.height / 2,
+    });
+    newPositions.set(b.id, {
+      left: aCenterX - b.width / 2,
+      top: aCenterY - b.height / 2,
+    });
 
     writePositions(shapes, newPositions);
     await context.sync();
@@ -26,9 +41,9 @@ export async function swapPosition(): Promise<void> {
 }
 
 /**
- * Swap Horizontal: Only swap the horizontal (left) positions.
- * Vertical (top) positions remain unchanged.
- * Preserves vertical alignment while exchanging columns.
+ * Swap Horizontal: Only swap horizontal positions (center-based).
+ * Vertical positions remain unchanged.
+ * Preserves rows while exchanging columns.
  */
 export async function swapHorizontal(): Promise<void> {
   await PowerPoint.run(async (context) => {
@@ -39,9 +54,13 @@ export async function swapHorizontal(): Promise<void> {
     }
 
     const [a, b] = data;
+
+    const aCenterX = a.left + a.width / 2;
+    const bCenterX = b.left + b.width / 2;
+
     const newPositions = new Map<string, Partial<ShapePositionData>>();
-    newPositions.set(a.id, { left: b.left });
-    newPositions.set(b.id, { left: a.left });
+    newPositions.set(a.id, { left: bCenterX - a.width / 2 });
+    newPositions.set(b.id, { left: aCenterX - b.width / 2 });
 
     writePositions(shapes, newPositions);
     await context.sync();
@@ -49,8 +68,8 @@ export async function swapHorizontal(): Promise<void> {
 }
 
 /**
- * Swap Vertical: Only swap the vertical (top) positions.
- * Horizontal (left) positions remain unchanged.
+ * Swap Vertical: Only swap vertical positions (center-based).
+ * Horizontal positions remain unchanged.
  */
 export async function swapVertical(): Promise<void> {
   await PowerPoint.run(async (context) => {
@@ -61,9 +80,13 @@ export async function swapVertical(): Promise<void> {
     }
 
     const [a, b] = data;
+
+    const aCenterY = a.top + a.height / 2;
+    const bCenterY = b.top + b.height / 2;
+
     const newPositions = new Map<string, Partial<ShapePositionData>>();
-    newPositions.set(a.id, { top: b.top });
-    newPositions.set(b.id, { top: a.top });
+    newPositions.set(a.id, { top: bCenterY - a.height / 2 });
+    newPositions.set(b.id, { top: aCenterY - b.height / 2 });
 
     writePositions(shapes, newPositions);
     await context.sync();
@@ -71,34 +94,22 @@ export async function swapVertical(): Promise<void> {
 }
 
 /**
- * Swap Center: Exchange positions based on center points.
- * Each shape's center moves to where the other shape's center was.
- * Ideal for differently-sized objects (e.g. McKinsey box tables).
+ * Swap Top-Left: Exchange raw top-left coordinates (legacy behavior).
+ * Use this when shapes are the same size or when you want exact
+ * coordinate swapping without center adjustment.
  */
-export async function swapCenter(): Promise<void> {
+export async function swapTopLeft(): Promise<void> {
   await PowerPoint.run(async (context) => {
     const { shapes, data } = await loadSelectedShapes(context, 2);
 
     if (data.length !== 2) {
-      throw new Error("Swap Center requires exactly 2 selected shapes.");
+      throw new Error("Swap Top-Left requires exactly 2 selected shapes.");
     }
 
     const [a, b] = data;
-
-    const aCenterX = a.left + a.width / 2;
-    const aCenterY = a.top + a.height / 2;
-    const bCenterX = b.left + b.width / 2;
-    const bCenterY = b.top + b.height / 2;
-
     const newPositions = new Map<string, Partial<ShapePositionData>>();
-    newPositions.set(a.id, {
-      left: bCenterX - a.width / 2,
-      top: bCenterY - a.height / 2,
-    });
-    newPositions.set(b.id, {
-      left: aCenterX - b.width / 2,
-      top: aCenterY - b.height / 2,
-    });
+    newPositions.set(a.id, { left: b.left, top: b.top });
+    newPositions.set(b.id, { left: a.left, top: a.top });
 
     writePositions(shapes, newPositions);
     await context.sync();

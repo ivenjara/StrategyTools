@@ -4,9 +4,9 @@ import {
   ArrowSwapRegular,
   ArrowLeftRegular,
   ArrowDownRegular,
-  CenterHorizontalRegular,
+  AlignStartVerticalRegular,
 } from "@fluentui/react-icons";
-import { swapPosition, swapHorizontal, swapVertical, swapCenter } from "../../core/swapOperations";
+import { swapPosition, swapHorizontal, swapVertical, swapTopLeft } from "../../core/swapOperations";
 
 interface SwapToolsProps {
   onStatus: (message: string, type: "success" | "error" | "info") => void;
@@ -35,7 +35,7 @@ const SwapTools: React.FC<SwapToolsProps> = ({ onStatus }) => {
 
   return (
     <div className={styles.grid}>
-      <Tooltip content="Exchange positions of two shapes (top-left swap)" relationship="description">
+      <Tooltip content="Swap two shapes into each other's exact spot" relationship="description">
         <Button
           size="small"
           icon={<ArrowSwapRegular />}
@@ -62,13 +62,13 @@ const SwapTools: React.FC<SwapToolsProps> = ({ onStatus }) => {
           Swap V
         </Button>
       </Tooltip>
-      <Tooltip content="Swap by center points (for different sizes)" relationship="description">
+      <Tooltip content="Swap raw top-left coordinates (for same-size shapes)" relationship="description">
         <Button
           size="small"
-          icon={<CenterHorizontalRegular />}
-          onClick={() => run(swapCenter, "Swapped by center")}
+          icon={<AlignStartVerticalRegular />}
+          onClick={() => run(swapTopLeft, "Swapped top-left")}
         >
-          Center
+          Top-Left
         </Button>
       </Tooltip>
     </div>

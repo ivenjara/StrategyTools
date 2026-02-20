@@ -1,6 +1,6 @@
 /* global Office */
 
-import { swapPosition, swapHorizontal, swapVertical, swapCenter } from "../core/swapOperations";
+import { swapPosition, swapHorizontal, swapVertical, swapTopLeft } from "../core/swapOperations";
 import { alignLeft, alignRight, alignCenter, alignTop, alignBottom, alignMiddle } from "../core/alignOperations";
 import { distributeHorizontal, distributeVertical } from "../core/distributeOperations";
 
@@ -30,7 +30,7 @@ function wrapCommand(
 Office.actions.associate("swapPosition", wrapCommand(swapPosition));
 Office.actions.associate("swapHorizontal", wrapCommand(swapHorizontal));
 Office.actions.associate("swapVertical", wrapCommand(swapVertical));
-Office.actions.associate("swapCenter", wrapCommand(swapCenter));
+Office.actions.associate("swapTopLeft", wrapCommand(swapTopLeft));
 
 // Register align commands
 Office.actions.associate("alignLeft", wrapCommand(alignLeft));
