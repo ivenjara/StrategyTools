@@ -11,12 +11,13 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Nightshift"/>
   <Description DefaultValue="Slide layout tools that work the night shift so you don't have to"/>
-  <IconUrl DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-64.png"/>
+  <IconUrl DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://localhost:3000"/>
 
   <AppDomains>
     <AppDomain>https://localhost:3000</AppDomain>
+    <AppDomain>https://ivenjara.github.io</AppDomain>
   </AppDomains>
 
   <Hosts>
@@ -71,9 +72,9 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
