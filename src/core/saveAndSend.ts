@@ -24,13 +24,21 @@ export function getPresentationName(): string {
 }
 
 /**
- * Build a safe filename with optional date/time stamp.
+ * Build a safe filename with optional date/time stamp and slide suffix.
  */
-export function formatFileName(name: string, includeDateTime: boolean): string {
+export function formatFileName(
+  name: string,
+  includeDateTime: boolean,
+  slideSuffix?: string
+): string {
   let base = name.trim() || "Presentation";
 
   // Remove filesystem-unsafe characters
   base = base.replace(/[<>:"/\\|?*]/g, "-");
+
+  if (slideSuffix) {
+    base += ` ${slideSuffix}`;
+  }
 
   if (includeDateTime) {
     const now = new Date();
@@ -43,6 +51,70 @@ export function formatFileName(name: string, includeDateTime: boolean): string {
   }
 
   return base + ".pptx";
+}
+
+/**
+ * Format slide numbers into a compact string like "Slides 1-3" or "Slides 1, 3, 5".
+ * Consecutive runs are collapsed into ranges.
+ */
+function formatSlideNumbers(positions: number[]): string {
+  if (positions.length === 0) return "";
+  const sorted = [...positions].sort((a, b) => a - b);
+
+  const parts: string[] = [];
+  let rangeStart = sorted[0];
+  let rangeEnd = sorted[0];
+
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === rangeEnd + 1) {
+      rangeEnd = sorted[i];
+    } else {
+      parts.push(rangeStart === rangeEnd ? `${rangeStart}` : `${rangeStart}-${rangeEnd}`);
+      rangeStart = sorted[i];
+      rangeEnd = sorted[i];
+    }
+  }
+  parts.push(rangeStart === rangeEnd ? `${rangeStart}` : `${rangeStart}-${rangeEnd}`);
+
+  return `Slides ${parts.join(", ")}`;
+}
+
+/**
+ * Get the 1-based positions of the currently selected slides.
+ * Returns both the slide IDs and their positions in the deck.
+ */
+export async function getSelectedSlideInfo(): Promise<{
+  slideIds: string[];
+  positions: number[];
+  slideSuffix: string;
+}> {
+  let slideIds: string[] = [];
+  let positions: number[] = [];
+
+  await PowerPoint.run(async (context) => {
+    const allSlides = context.presentation.slides;
+    allSlides.load("items/id");
+    const selected = context.presentation.getSelectedSlides();
+    selected.load("items/id");
+    await context.sync();
+
+    if (selected.items.length === 0) {
+      throw new Error("No slides selected. Select one or more slides in the slide panel first.");
+    }
+
+    const selectedIds = new Set(selected.items.map((s) => s.id));
+
+    slideIds = selected.items.map((s) => s.id);
+    positions = allSlides.items
+      .map((s, index) => (selectedIds.has(s.id) ? index + 1 : -1))
+      .filter((p) => p !== -1);
+  });
+
+  return {
+    slideIds,
+    positions,
+    slideSuffix: formatSlideNumbers(positions),
+  };
 }
 
 /**
@@ -108,7 +180,7 @@ export function getFullPresentation(): Promise<Blob> {
  * Export only the selected slides as a new .pptx Blob.
  * Uses SlideCollection.exportAsBase64Presentation (PowerPointApi 1.10).
  */
-export async function getSelectedSlidesPresentation(): Promise<Blob> {
+export async function getSelectedSlidesPresentation(slideIds: string[]): Promise<Blob> {
   const hasExportApi = Office.context.requirements.isSetSupported("PowerPointApi", "1.10");
 
   if (!hasExportApi) {
@@ -120,18 +192,8 @@ export async function getSelectedSlidesPresentation(): Promise<Blob> {
   let base64: string = "";
 
   await PowerPoint.run(async (context) => {
-    const selected = context.presentation.getSelectedSlides();
-    selected.load("items/id");
-    await context.sync();
-
-    if (selected.items.length === 0) {
-      throw new Error("No slides selected. Select one or more slides in the slide panel first.");
-    }
-
-    const slideIds = selected.items.map((s) => s.id);
     const result = context.presentation.slides.exportAsBase64Presentation(slideIds);
     await context.sync();
-
     base64 = result.value;
   });
 

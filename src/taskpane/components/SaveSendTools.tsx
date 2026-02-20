@@ -17,6 +17,7 @@ import {
   formatFileName,
   getFullPresentation,
   getSelectedSlidesPresentation,
+  getSelectedSlideInfo,
   triggerDownload,
   composeEmail,
 } from "../../core/saveAndSend";
@@ -48,38 +49,65 @@ const SaveSendTools: React.FC<SaveSendToolsProps> = ({ onStatus }) => {
   const [fileName, setFileName] = useState("Presentation");
   const [includeDateTime, setIncludeDateTime] = useState(false);
   const [scope, setScope] = useState<"entire" | "selected">("entire");
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
     setFileName(getPresentationName());
   }, []);
 
+  /** Download either the full deck or just selected slides. */
   const handleDownload = async () => {
-    setIsDownloading(true);
+    setIsBusy(true);
     try {
-      const finalName = formatFileName(fileName, includeDateTime);
-      const blob =
-        scope === "selected"
-          ? await getSelectedSlidesPresentation()
-          : await getFullPresentation();
-      triggerDownload(blob, finalName);
-      onStatus(`Downloaded ${finalName}`, "success");
+      if (scope === "selected") {
+        const info = await getSelectedSlideInfo();
+        const finalName = formatFileName(fileName, includeDateTime, info.slideSuffix);
+        const blob = await getSelectedSlidesPresentation(info.slideIds);
+        triggerDownload(blob, finalName);
+        onStatus(`Downloaded ${finalName}`, "success");
+      } else {
+        const finalName = formatFileName(fileName, includeDateTime);
+        const blob = await getFullPresentation();
+        triggerDownload(blob, finalName);
+        onStatus(`Downloaded ${finalName}`, "success");
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Download failed";
       onStatus(message, "error");
     } finally {
-      setIsDownloading(false);
+      setIsBusy(false);
     }
   };
 
-  const handleComposeEmail = () => {
+  /**
+   * Compose email: downloads the file first (so the user can attach it),
+   * then opens the email client with a pre-filled subject and body.
+   */
+  const handleComposeEmail = async () => {
+    setIsBusy(true);
     try {
-      const finalName = formatFileName(fileName, includeDateTime);
+      let finalName: string;
+
+      if (scope === "selected") {
+        const info = await getSelectedSlideInfo();
+        finalName = formatFileName(fileName, includeDateTime, info.slideSuffix);
+        const blob = await getSelectedSlidesPresentation(info.slideIds);
+        triggerDownload(blob, finalName);
+      } else {
+        finalName = formatFileName(fileName, includeDateTime);
+        const blob = await getFullPresentation();
+        triggerDownload(blob, finalName);
+      }
+
+      // Brief delay so the download starts before the email client opens
+      await new Promise((resolve) => setTimeout(resolve, 500));
       composeEmail(finalName);
-      onStatus("Opening email client...", "info");
+      onStatus("File downloaded — attach it to the email", "info");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to open email";
+      const message = err instanceof Error ? err.message : "Failed to compose email";
       onStatus(message, "error");
+    } finally {
+      setIsBusy(false);
     }
   };
 
@@ -116,16 +144,17 @@ const SaveSendTools: React.FC<SaveSendToolsProps> = ({ onStatus }) => {
       <div className={styles.buttonGrid}>
         <Button
           size="small"
-          icon={isDownloading ? <Spinner size="tiny" /> : <ArrowDownloadRegular />}
+          icon={isBusy ? <Spinner size="tiny" /> : <ArrowDownloadRegular />}
           onClick={handleDownload}
-          disabled={isDownloading}
+          disabled={isBusy}
         >
-          {isDownloading ? "Saving..." : "Download"}
+          {isBusy ? "Saving..." : "Download"}
         </Button>
         <Button
           size="small"
           icon={<MailRegular />}
           onClick={handleComposeEmail}
+          disabled={isBusy}
         >
           Compose Email
         </Button>
