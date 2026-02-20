@@ -1,7 +1,7 @@
 /* global PowerPoint */
 
 import { ShapePositionData } from "./types";
-import { loadSelectedShapes, writePositions } from "./shapeHelpers";
+import { loadSelectedShapes, writePositionsWithRefresh } from "./shapeHelpers";
 
 /** Align all shapes to the leftmost edge. */
 export async function alignLeft(): Promise<void> {
@@ -10,8 +10,7 @@ export async function alignLeft(): Promise<void> {
     const minLeft = Math.min(...data.map((s) => s.left));
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     data.forEach((s) => newPositions.set(s.id, { left: minLeft }));
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
@@ -22,8 +21,7 @@ export async function alignRight(): Promise<void> {
     const maxRight = Math.max(...data.map((s) => s.left + s.width));
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     data.forEach((s) => newPositions.set(s.id, { left: maxRight - s.width }));
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
@@ -36,8 +34,7 @@ export async function alignCenter(): Promise<void> {
     const centerX = (minLeft + maxRight) / 2;
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     data.forEach((s) => newPositions.set(s.id, { left: centerX - s.width / 2 }));
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
@@ -48,8 +45,7 @@ export async function alignTop(): Promise<void> {
     const minTop = Math.min(...data.map((s) => s.top));
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     data.forEach((s) => newPositions.set(s.id, { top: minTop }));
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
@@ -60,8 +56,7 @@ export async function alignBottom(): Promise<void> {
     const maxBottom = Math.max(...data.map((s) => s.top + s.height));
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     data.forEach((s) => newPositions.set(s.id, { top: maxBottom - s.height }));
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
@@ -74,7 +69,6 @@ export async function alignMiddle(): Promise<void> {
     const centerY = (minTop + maxBottom) / 2;
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     data.forEach((s) => newPositions.set(s.id, { top: centerY - s.height / 2 }));
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }

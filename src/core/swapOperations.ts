@@ -1,7 +1,7 @@
 /* global PowerPoint */
 
 import { ShapePositionData } from "./types";
-import { loadSelectedShapes, writePositions } from "./shapeHelpers";
+import { loadSelectedShapes, writePositionsWithRefresh } from "./shapeHelpers";
 
 /**
  * Swap Position: Exchange positions based on center points.
@@ -18,13 +18,11 @@ export async function swapPosition(): Promise<void> {
 
     const [a, b] = data;
 
-    // Calculate center points
     const aCenterX = a.left + a.width / 2;
     const aCenterY = a.top + a.height / 2;
     const bCenterX = b.left + b.width / 2;
     const bCenterY = b.top + b.height / 2;
 
-    // Move each shape so its center lands at the other's former center
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     newPositions.set(a.id, {
       left: bCenterX - a.width / 2,
@@ -35,15 +33,13 @@ export async function swapPosition(): Promise<void> {
       top: aCenterY - b.height / 2,
     });
 
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
 /**
  * Swap Horizontal: Only swap horizontal positions (center-based).
  * Vertical positions remain unchanged.
- * Preserves rows while exchanging columns.
  */
 export async function swapHorizontal(): Promise<void> {
   await PowerPoint.run(async (context) => {
@@ -62,8 +58,7 @@ export async function swapHorizontal(): Promise<void> {
     newPositions.set(a.id, { left: bCenterX - a.width / 2 });
     newPositions.set(b.id, { left: aCenterX - b.width / 2 });
 
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
@@ -88,15 +83,12 @@ export async function swapVertical(): Promise<void> {
     newPositions.set(a.id, { top: bCenterY - a.height / 2 });
     newPositions.set(b.id, { top: aCenterY - b.height / 2 });
 
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
 /**
- * Swap Top-Left: Exchange raw top-left coordinates (legacy behavior).
- * Use this when shapes are the same size or when you want exact
- * coordinate swapping without center adjustment.
+ * Swap Top-Left: Exchange raw top-left coordinates (for same-size shapes).
  */
 export async function swapTopLeft(): Promise<void> {
   await PowerPoint.run(async (context) => {
@@ -111,7 +103,6 @@ export async function swapTopLeft(): Promise<void> {
     newPositions.set(a.id, { left: b.left, top: b.top });
     newPositions.set(b.id, { left: a.left, top: a.top });
 
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }

@@ -1,12 +1,11 @@
 /* global PowerPoint */
 
 import { ShapePositionData } from "./types";
-import { loadSelectedShapes, writePositions } from "./shapeHelpers";
+import { loadSelectedShapes, writePositionsWithRefresh } from "./shapeHelpers";
 
 /**
  * Distribute Horizontally: Even spacing between 3+ shapes.
  * Shapes sorted by left position. Leftmost and rightmost stay in place.
- * Intermediate shapes are evenly spaced within the bounding span.
  */
 export async function distributeHorizontal(): Promise<void> {
   await PowerPoint.run(async (context) => {
@@ -29,15 +28,13 @@ export async function distributeHorizontal(): Promise<void> {
       currentLeft += s.width + gapBetween;
     }
 
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }
 
 /**
  * Distribute Vertically: Even spacing between 3+ shapes.
  * Shapes sorted by top position. Topmost and bottommost stay in place.
- * Intermediate shapes are evenly spaced within the bounding span.
  */
 export async function distributeVertical(): Promise<void> {
   await PowerPoint.run(async (context) => {
@@ -60,7 +57,6 @@ export async function distributeVertical(): Promise<void> {
       currentTop += s.height + gapBetween;
     }
 
-    writePositions(shapes, newPositions);
-    await context.sync();
+    await writePositionsWithRefresh(shapes, newPositions, context);
   });
 }

@@ -49,3 +49,35 @@ export function writePositions(
     }
   }
 }
+
+/**
+ * Writes positions with a nudge trick to force PowerPoint for Web to re-render.
+ * First moves shapes to a tiny offset, syncs, then moves to the final position.
+ */
+export async function writePositionsWithRefresh(
+  shapes: PowerPoint.Shape[],
+  newPositions: Map<string, Partial<ShapePositionData>>,
+  context: PowerPoint.RequestContext
+): Promise<void> {
+  const NUDGE = 0.5; // half a point offset
+
+  // Step 1: nudge shapes to a slightly offset position
+  for (const shape of shapes) {
+    const pos = newPositions.get(shape.id);
+    if (pos) {
+      if (pos.left !== undefined) shape.left = pos.left + NUDGE;
+      if (pos.top !== undefined) shape.top = pos.top + NUDGE;
+    }
+  }
+  await context.sync();
+
+  // Step 2: move to the actual final position
+  for (const shape of shapes) {
+    const pos = newPositions.get(shape.id);
+    if (pos) {
+      if (pos.left !== undefined) shape.left = pos.left;
+      if (pos.top !== undefined) shape.top = pos.top;
+    }
+  }
+  await context.sync();
+}
