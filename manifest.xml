@@ -7,12 +7,12 @@
 
   <Id>230ca798-68dc-47d5-b85b-48cea619fc4b</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>StrategyTools</ProviderName>
+  <ProviderName>Nightshift</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Strategy Tools"/>
-  <Description DefaultValue="Layout and positioning tools for strategy consultants"/>
-  <IconUrl DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-64.png"/>
+  <DisplayName DefaultValue="Nightshift"/>
+  <Description DefaultValue="Slide layout tools that work the night shift so you don't have to"/>
+  <IconUrl DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://localhost:3000"/>
 
   <AppDomains>
@@ -39,8 +39,8 @@
           </GetStarted>
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <OfficeTab id="TabHome">
-              <Group id="StrategyToolsGroup">
-                <Label resid="StrategyToolsGroup.Label"/>
+              <Group id="NightshiftGroup">
+                <Label resid="NightshiftGroup.Label"/>
                 <Icon>
                   <bt:Image size="16" resid="Icon.16x16"/>
                   <bt:Image size="32" resid="Icon.32x32"/>
@@ -58,7 +58,7 @@
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>StrategyToolsPane</TaskpaneId>
+                    <TaskpaneId>NightshiftPane</TaskpaneId>
                     <SourceLocation resid="Taskpane.Url"/>
                   </Action>
                 </Control>
@@ -71,22 +71,22 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://ivenjara.github.io/StrategyTools/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://ivenjara.github.io/Nightshift/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://localhost:3000"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="StrategyToolsGroup.Label" DefaultValue="Strategy Tools"/>
-        <bt:String id="ShowTaskPane.Label" DefaultValue="Strategy Tools"/>
-        <bt:String id="GetStarted.Title" DefaultValue="Strategy Tools"/>
+        <bt:String id="NightshiftGroup.Label" DefaultValue="Nightshift"/>
+        <bt:String id="ShowTaskPane.Label" DefaultValue="Nightshift"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Nightshift"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="ShowTaskPane.Tooltip" DefaultValue="Open the Strategy Tools panel with swap, align, and distribute tools"/>
-        <bt:String id="GetStarted.Description" DefaultValue="Click Strategy Tools on the Home tab to get started."/>
+        <bt:String id="ShowTaskPane.Tooltip" DefaultValue="Open the Nightshift panel"/>
+        <bt:String id="GetStarted.Description" DefaultValue="Click the Nightshift button on the Home tab to get started."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

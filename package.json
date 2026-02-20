@@ -1,7 +1,7 @@
 {
-  "name": "strategy-tools",
+  "name": "nightshift",
   "version": "1.0.0",
-  "description": "PowerPoint add-in with layout and positioning tools for strategy consultants",
+  "description": "Nightshift - slide layout tools that work the night shift so you don't have to",
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode production",

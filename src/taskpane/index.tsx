@@ -11,7 +11,7 @@ const root = createRoot(rootElement!);
 Office.onReady(() => {
   root.render(
     <FluentProvider theme={webLightTheme}>
-      <App title="Strategy Tools" />
+      <App title="Nightshift" />
     </FluentProvider>
   );
 });

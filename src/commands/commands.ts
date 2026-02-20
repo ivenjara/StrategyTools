@@ -20,7 +20,7 @@ function wrapCommand(
       await operation();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error("Strategy Tools command error:", message);
+      console.error("Nightshift command error:", message);
     }
     event.completed();
   };

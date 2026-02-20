@@ -24,7 +24,7 @@ const useStyles = makeStyles({
     fontSize: "10px",
     fontWeight: "600",
     color: tokens.colorNeutralForegroundOnBrand,
-    backgroundColor: tokens.colorBrandBackground,
+    backgroundColor: "#181824",
     padding: "2px 6px",
     borderRadius: "4px",
   },
