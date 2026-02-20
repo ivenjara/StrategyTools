@@ -1,11 +1,11 @@
 import * as React from "react";
 import { Button, makeStyles, Tooltip } from "@fluentui/react-components";
 import {
-  ArrowSwapRegular,
   ArrowLeftRegular,
   ArrowDownRegular,
   AlignStartVerticalRegular,
 } from "@fluentui/react-icons";
+import SwapIcon from "./SwapIcon";
 import { swapPosition, swapHorizontal, swapVertical, swapTopLeft } from "../../core/swapOperations";
 
 interface SwapToolsProps {
@@ -38,7 +38,7 @@ const SwapTools: React.FC<SwapToolsProps> = ({ onStatus }) => {
       <Tooltip content="Swap two shapes into each other's exact spot" relationship="description">
         <Button
           size="small"
-          icon={<ArrowSwapRegular />}
+          icon={<SwapIcon />}
           onClick={() => run(swapPosition, "Positions swapped")}
         >
           Swap
