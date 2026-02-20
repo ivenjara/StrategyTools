@@ -52,32 +52,61 @@ export function writePositions(
 
 /**
  * Writes positions with a nudge trick to force PowerPoint for Web to re-render.
- * First moves shapes to a tiny offset, syncs, waits briefly so the web renderer
- * processes the change, then moves to the final position and syncs again.
+ *
+ * The web renderer can ignore tiny changes, so we use a two-phase approach:
+ *   Phase 1 — move every shape to its ORIGINAL position offset by a visible amount
+ *             (away from the target), then sync. This guarantees the renderer sees
+ *             a meaningful property change for every shape.
+ *   Phase 2 — after a pause, set the final target positions and sync again.
+ *
+ * The offset direction is chosen to maximise the delta: if a shape is moving
+ * towards a smaller coordinate the nudge goes positive, and vice versa.
  */
 export async function writePositionsWithRefresh(
   shapes: PowerPoint.Shape[],
   newPositions: Map<string, Partial<ShapePositionData>>,
   context: PowerPoint.RequestContext
 ): Promise<void> {
-  const NUDGE = 0.5; // half a point offset
+  const NUDGE = 5; // points — large enough for the web renderer to notice
 
-  // Step 1: nudge shapes to a slightly offset position
+  // Build a lookup of the current (pre-move) values so we can nudge from them
+  const current = new Map<string, { left: number; top: number; width: number; height: number }>();
+  for (const shape of shapes) {
+    current.set(shape.id, {
+      left: shape.left,
+      top: shape.top,
+      width: shape.width,
+      height: shape.height,
+    });
+  }
+
+  // Step 1: nudge each shape away from its target so the renderer detects a change
   for (const shape of shapes) {
     const pos = newPositions.get(shape.id);
-    if (pos) {
-      if (pos.left !== undefined) shape.left = pos.left + NUDGE;
-      if (pos.top !== undefined) shape.top = pos.top + NUDGE;
-      if (pos.width !== undefined) shape.width = pos.width + NUDGE;
-      if (pos.height !== undefined) shape.height = pos.height + NUDGE;
+    const cur = current.get(shape.id);
+    if (pos && cur) {
+      if (pos.left !== undefined) {
+        const dir = pos.left <= cur.left ? NUDGE : -NUDGE;
+        shape.left = pos.left + dir;
+      }
+      if (pos.top !== undefined) {
+        const dir = pos.top <= cur.top ? NUDGE : -NUDGE;
+        shape.top = pos.top + dir;
+      }
+      if (pos.width !== undefined) {
+        shape.width = pos.width + NUDGE;
+      }
+      if (pos.height !== undefined) {
+        shape.height = pos.height + NUDGE;
+      }
     }
   }
   await context.sync();
 
-  // Brief pause so the web renderer processes the nudge before the final move
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  // Pause so the web renderer processes the intermediate state
+  await new Promise((resolve) => setTimeout(resolve, 150));
 
-  // Step 2: move to the actual final position
+  // Step 2: set the actual final positions
   for (const shape of shapes) {
     const pos = newPositions.get(shape.id);
     if (pos) {
