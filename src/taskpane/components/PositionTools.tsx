@@ -5,8 +5,9 @@ import {
   CopyRegular,
   ClipboardPasteRegular,
   ResizeRegular,
+  ScaleFitRegular,
 } from "@fluentui/react-icons";
-import { copyPosition, pastePosition, pasteSize } from "../../core/positionClipboard";
+import { copyPosition, pastePosition, pasteSize, pasteSizeOnly } from "../../core/positionClipboard";
 
 interface PositionToolsProps {
   onStatus: (message: string, type: "success" | "error" | "info") => void;
@@ -15,7 +16,7 @@ interface PositionToolsProps {
 const useStyles = makeStyles({
   grid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
+    gridTemplateColumns: "1fr 1fr",
     gap: "6px",
   },
 });
@@ -41,11 +42,11 @@ const PositionTools: React.FC<PositionToolsProps> = ({ onStatus }) => {
           size="small"
           icon={<CopyRegular />}
           onClick={async () => {
-            await run(copyPosition, "Position copied");
+            await run(copyPosition, "Position + size copied");
             setHasCopied(true);
           }}
         >
-          Copy Pos
+          Copy
         </Button>
       </Tooltip>
       <Tooltip content="Move selected shape(s) to the copied position" relationship="description">
@@ -58,7 +59,17 @@ const PositionTools: React.FC<PositionToolsProps> = ({ onStatus }) => {
           Paste Pos
         </Button>
       </Tooltip>
-      <Tooltip content="Match position and size of copied shape" relationship="description">
+      <Tooltip content="Resize selected shape(s) to match the copied size" relationship="description">
+        <Button
+          size="small"
+          icon={<ScaleFitRegular />}
+          disabled={!hasCopied}
+          onClick={() => run(pasteSizeOnly, "Size applied")}
+        >
+          Paste Size
+        </Button>
+      </Tooltip>
+      <Tooltip content="Match both position and size of copied shape" relationship="description">
         <Button
           size="small"
           icon={<ResizeRegular />}

@@ -87,6 +87,35 @@ export async function pasteSize(): Promise<void> {
   });
 }
 
+/**
+ * Paste Size Only: Applies the copied width and height to the selected shape(s).
+ * Position stays unchanged — only the size is matched.
+ */
+export async function pasteSizeOnly(): Promise<void> {
+  if (!copiedPosition) {
+    throw new Error("No position copied. Select a shape and click Copy Position first.");
+  }
+
+  const pos = copiedPosition;
+  await PowerPoint.run(async (context) => {
+    const { shapes } = await loadSelectedShapes(context, 1);
+
+    // Nudge first to force web re-render
+    for (const shape of shapes) {
+      shape.width = pos.width + 0.5;
+      shape.height = pos.height + 0.5;
+    }
+    await context.sync();
+
+    // Final size
+    for (const shape of shapes) {
+      shape.width = pos.width;
+      shape.height = pos.height;
+    }
+    await context.sync();
+  });
+}
+
 /** Returns whether a position has been copied */
 export function hasPosition(): boolean {
   return copiedPosition !== null;
