@@ -51,62 +51,68 @@ export function writePositions(
 }
 
 /**
- * Writes positions with a nudge trick to force PowerPoint for Web to re-render.
+ * Writes positions with an adaptive nudge trick for PowerPoint for Web.
  *
- * The web renderer can ignore tiny changes, so we use a two-phase approach:
- *   Phase 1 — move every shape to its ORIGINAL position offset by a visible amount
- *             (away from the target), then sync. This guarantees the renderer sees
- *             a meaningful property change for every shape.
- *   Phase 2 — after a pause, set the final target positions and sync again.
+ * The web renderer can ignore tiny property changes, so we need a two-phase
+ * write: nudge first, pause, then set final values. But for large movements
+ * (paste position, swap) the renderer already detects the change, so we use
+ * a minimal nudge and short pause to avoid visible delay.
  *
- * The offset direction is chosen to maximise the delta: if a shape is moving
- * towards a smaller coordinate the nudge goes positive, and vice versa.
+ * Strategy:
+ *   - Measure the max distance any shape is moving.
+ *   - If the movement is small (< 5pt, e.g. alignment), use a strong 5pt
+ *     nudge in the opposite direction and a 150ms pause.
+ *   - If the movement is large, use a tiny 0.5pt nudge and a 30ms pause.
  */
 export async function writePositionsWithRefresh(
   shapes: PowerPoint.Shape[],
   newPositions: Map<string, Partial<ShapePositionData>>,
   context: PowerPoint.RequestContext
 ): Promise<void> {
-  const NUDGE = 5; // points — large enough for the web renderer to notice
-
-  // Build a lookup of the current (pre-move) values so we can nudge from them
+  // Capture current values
   const current = new Map<string, { left: number; top: number; width: number; height: number }>();
+  let maxDelta = 0;
+
   for (const shape of shapes) {
-    current.set(shape.id, {
-      left: shape.left,
-      top: shape.top,
-      width: shape.width,
-      height: shape.height,
-    });
+    const cur = { left: shape.left, top: shape.top, width: shape.width, height: shape.height };
+    current.set(shape.id, cur);
+
+    const pos = newPositions.get(shape.id);
+    if (pos) {
+      if (pos.left !== undefined) maxDelta = Math.max(maxDelta, Math.abs(pos.left - cur.left));
+      if (pos.top !== undefined) maxDelta = Math.max(maxDelta, Math.abs(pos.top - cur.top));
+      if (pos.width !== undefined) maxDelta = Math.max(maxDelta, Math.abs(pos.width - cur.width));
+      if (pos.height !== undefined) maxDelta = Math.max(maxDelta, Math.abs(pos.height - cur.height));
+    }
   }
 
-  // Step 1: nudge each shape away from its target so the renderer detects a change
+  // Small movement → strong nudge; large movement → light nudge
+  const isSmallMove = maxDelta < 5;
+  const nudge = isSmallMove ? 5 : 0.5;
+  const pause = isSmallMove ? 150 : 30;
+
+  // Step 1: nudge away from target
   for (const shape of shapes) {
     const pos = newPositions.get(shape.id);
     const cur = current.get(shape.id);
     if (pos && cur) {
       if (pos.left !== undefined) {
-        const dir = pos.left <= cur.left ? NUDGE : -NUDGE;
+        const dir = pos.left <= cur.left ? nudge : -nudge;
         shape.left = pos.left + dir;
       }
       if (pos.top !== undefined) {
-        const dir = pos.top <= cur.top ? NUDGE : -NUDGE;
+        const dir = pos.top <= cur.top ? nudge : -nudge;
         shape.top = pos.top + dir;
       }
-      if (pos.width !== undefined) {
-        shape.width = pos.width + NUDGE;
-      }
-      if (pos.height !== undefined) {
-        shape.height = pos.height + NUDGE;
-      }
+      if (pos.width !== undefined) shape.width = pos.width + nudge;
+      if (pos.height !== undefined) shape.height = pos.height + nudge;
     }
   }
   await context.sync();
 
-  // Pause so the web renderer processes the intermediate state
-  await new Promise((resolve) => setTimeout(resolve, 150));
+  await new Promise((resolve) => setTimeout(resolve, pause));
 
-  // Step 2: set the actual final positions
+  // Step 2: final positions
   for (const shape of shapes) {
     const pos = newPositions.get(shape.id);
     if (pos) {
