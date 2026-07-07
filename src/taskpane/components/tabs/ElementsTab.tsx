@@ -2,7 +2,7 @@ import * as React from "react";
 import { makeStyles } from "@griffel/react";
 import HarveyBallSection from "../sections/HarveyBallSection";
 import StatusStampsSection from "../sections/StatusStampsSection";
-import TableToTextSection from "../sections/TableToTextSection";
+import TableTextSection from "../sections/TableTextSection";
 import { OnError } from "../App";
 
 const useStyles = makeStyles({
@@ -21,7 +21,7 @@ const ElementsTab: React.FC<{ onError: OnError }> = ({ onError }) => {
     <div className={styles.root}>
       <HarveyBallSection onError={onError} />
       <StatusStampsSection onError={onError} />
-      <TableToTextSection onError={onError} />
+      <TableTextSection onError={onError} />
     </div>
   );
 };
