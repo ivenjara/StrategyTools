@@ -1,5 +1,7 @@
 /* global PowerPoint, Office */
 
+import { sanitizeXmlText } from "./textSanitize";
+
 export type TableTextMode = "cells" | "single";
 export type SeparatorKey = "tab" | "space" | "comma" | "semicolon" | "pipe" | "newline";
 
@@ -67,9 +69,13 @@ export async function convertTableToText(mode: TableTextMode, separator: Separat
     const slide = tableShape.getParentSlide();
 
     if (mode === "cells") {
+      // Large tables mean hundreds of shape creations; sync in chunks so
+      // a single giant batch can't hang or overwhelm the host.
+      const CHUNK_SIZE = 20;
+      let created = 0;
       for (let r = 0; r < rowCount; r++) {
         for (let c = 0; c < columnCount; c++) {
-          const text = (values[r][c] ?? "").trim();
+          const text = sanitizeXmlText(values[r][c] ?? "").trim();
           if (!text) continue; // merged-cell fillers and empty cells
           slide.shapes.addTextBox(text, {
             left: tableShape.left + columnOffsets[c],
@@ -77,10 +83,16 @@ export async function convertTableToText(mode: TableTextMode, separator: Separat
             width: columnWidths[c],
             height: rowHeights[r],
           });
+          created++;
+          if (created % CHUNK_SIZE === 0) {
+            await context.sync();
+          }
         }
       }
     } else {
-      const joined = values.map((row) => row.join(SEPARATORS[separator])).join("\n");
+      const joined = values
+        .map((row) => row.map((cell) => sanitizeXmlText(cell ?? "")).join(SEPARATORS[separator]))
+        .join("\n");
       const box = slide.shapes.addTextBox(joined, {
         left: tableShape.left,
         top: tableShape.top,

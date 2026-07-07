@@ -32,7 +32,9 @@ const App: React.FC = () => {
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onError = useCallback<OnError>((message) => {
-    setError(message);
+    // Host errors occasionally arrive with an empty message; an empty
+    // string would hide the ErrorBar entirely.
+    setError(message.trim() ? message : "Operation failed — try again with a smaller selection.");
     if (dismissTimer.current) clearTimeout(dismissTimer.current);
     dismissTimer.current = setTimeout(() => setError(null), 4000);
   }, []);

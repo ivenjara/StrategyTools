@@ -2,6 +2,7 @@
 
 import { SeparatorKey } from "./tableToText";
 import { TEXT_CAPABLE_SHAPE_TYPES } from "./shapeHelpers";
+import { sanitizeXmlText } from "./textSanitize";
 
 /** "newline" can't split cells — lines are rows. */
 export type SplitSeparatorKey = Exclude<SeparatorKey, "newline">;
@@ -25,17 +26,11 @@ const SPLIT_PATTERNS: Record<SplitSeparatorKey, RegExp> = {
 };
 
 /**
- * Table values are serialized into slide XML, where control characters
- * (notably \x0B, PowerPoint's soft line break) are invalid and make
- * addTable throw InvalidArgument. Normalize breaks to \n and strip the
- * rest. `flattenNewlines` additionally collapses newlines to spaces for
- * the retry path on hosts that reject multi-line cell values.
+ * `flattenNewlines` collapses newlines to spaces for the retry path on
+ * hosts that reject multi-line cell values in addTable.
  */
 function sanitizeCell(text: string, flattenNewlines: boolean): string {
-  const normalized = text
-    .replace(/\r\n|\r|\x0B/g, "\n")
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\x00-\x08\x0C\x0E-\x1F\x7F]/g, "");
+  const normalized = sanitizeXmlText(text);
   return flattenNewlines ? normalized.replace(/\n+/g, " ").trim() : normalized;
 }
 
