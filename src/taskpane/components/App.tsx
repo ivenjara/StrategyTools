@@ -32,6 +32,8 @@ const App: React.FC = () => {
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onError = useCallback<OnError>((message) => {
+    // eslint-disable-next-line no-console
+    console.error("[Nightshift]", message);
     // Host errors occasionally arrive with an empty message; an empty
     // string would hide the ErrorBar entirely.
     setError(message.trim() ? message : "Operation failed — try again with a smaller selection.");

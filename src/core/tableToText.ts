@@ -47,24 +47,38 @@ export async function convertTableToText(mode: TableTextMode, separator: Separat
 
     const table = tableShape.getTable();
     table.load("values,rowCount,columnCount");
-    if (hasGeometry) {
-      table.columns.load("items/width");
-      table.rows.load("items/currentHeight");
-    }
     await context.sync();
 
     const values = table.values;
     const rowCount = table.rowCount;
     const columnCount = table.columnCount;
 
-    const columnWidths = hasGeometry
-      ? table.columns.items.map((c) => c.width)
-      : Array(columnCount).fill(tableShape.width / columnCount);
-    const rowHeights = hasGeometry
-      ? table.rows.items.map((r) => r.currentHeight)
-      : Array(rowCount).fill(tableShape.height / rowCount);
-    const columnOffsets = offsets(columnWidths);
-    const rowOffsets = offsets(rowHeights);
+    // Exact cell geometry (1.9) fails on some hosts (PowerPoint web has
+    // returned unpopulated collections here), so load it in its own sync
+    // and fall back to an even split on any problem.
+    let columnWidths: number[] | null = null;
+    let rowHeights: number[] | null = null;
+    if (hasGeometry) {
+      try {
+        table.columns.load("items/width");
+        table.rows.load("items/currentHeight");
+        await context.sync();
+        columnWidths = table.columns.items.map((c) => c.width);
+        rowHeights = table.rows.items.map((r) => r.currentHeight);
+      } catch {
+        columnWidths = null;
+        rowHeights = null;
+      }
+    }
+    const geometryUsable =
+      columnWidths?.length === columnCount &&
+      rowHeights?.length === rowCount &&
+      columnWidths.every((w) => Number.isFinite(w) && w > 0) &&
+      rowHeights.every((h) => Number.isFinite(h) && h > 0);
+    const cellWidths = geometryUsable ? columnWidths! : Array(columnCount).fill(tableShape.width / columnCount);
+    const cellHeights = geometryUsable ? rowHeights! : Array(rowCount).fill(tableShape.height / rowCount);
+    const columnOffsets = offsets(cellWidths);
+    const rowOffsets = offsets(cellHeights);
 
     const slide = tableShape.getParentSlide();
 
@@ -80,8 +94,8 @@ export async function convertTableToText(mode: TableTextMode, separator: Separat
           slide.shapes.addTextBox(text, {
             left: tableShape.left + columnOffsets[c],
             top: tableShape.top + rowOffsets[r],
-            width: columnWidths[c],
-            height: rowHeights[r],
+            width: cellWidths[c],
+            height: cellHeights[r],
           });
           created++;
           if (created % CHUNK_SIZE === 0) {

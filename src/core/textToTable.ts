@@ -97,16 +97,26 @@ export async function convertTextToTable(separator: SplitSeparatorKey = "tab"): 
   try {
     return await runConversion(separator, false);
   } catch (err: unknown) {
-    // Nothing is created or deleted when addTable rejects the values, so a
-    // retry with newline-free cells is safe and can't duplicate the table.
+    // Nothing is created or deleted when addTable rejects its options, so a
+    // degraded retry is safe and can't duplicate the table. Some hosts
+    // (PowerPoint web) throw InvalidArgument for per-column widths and for
+    // multi-line cell values, so the retry drops both.
     if ((err as { code?: string })?.code === "InvalidArgument") {
-      return runConversion(separator, true);
+      try {
+        return await runConversion(separator, true);
+      } catch (retryErr: unknown) {
+        const location = (retryErr as { debugInfo?: { errorLocation?: string } })?.debugInfo?.errorLocation;
+        if (retryErr instanceof Error && location) {
+          retryErr.message = `${retryErr.message} (${location})`;
+        }
+        throw retryErr;
+      }
     }
     throw err;
   }
 }
 
-async function runConversion(separator: SplitSeparatorKey, flattenNewlines: boolean): Promise<TextToTableResult> {
+async function runConversion(separator: SplitSeparatorKey, degraded: boolean): Promise<TextToTableResult> {
   return PowerPoint.run(async (context) => {
     const selected = context.presentation.getSelectedShapes();
     selected.load("items/id,items/type,items/left,items/top,items/width,items/height");
@@ -188,7 +198,7 @@ async function runConversion(separator: SplitSeparatorKey, flattenNewlines: bool
       columnWidths = colClusters.map((_, c) => Math.max(boundaries[c + 1] - boundaries[c], 10));
     }
 
-    values = values.map((row) => row.map((cell) => sanitizeCell(cell, flattenNewlines)));
+    values = values.map((row) => row.map((cell) => sanitizeCell(cell, degraded)));
 
     const slide = textBoxes[0].getParentSlide();
     slide.shapes.addTable(values.length, values[0].length, {
@@ -196,7 +206,7 @@ async function runConversion(separator: SplitSeparatorKey, flattenNewlines: bool
       left,
       top,
       width,
-      ...(columnWidths ? { columns: columnWidths.map((w) => ({ columnWidth: w })) } : {}),
+      ...(columnWidths && !degraded ? { columns: columnWidths.map((w) => ({ columnWidth: w })) } : {}),
     });
 
     // Create the table first so a failure never destroys the source boxes.
