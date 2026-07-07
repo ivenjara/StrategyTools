@@ -1,77 +1,63 @@
 import * as React from "react";
-import { useState } from "react";
-import { makeStyles, tokens } from "@fluentui/react-components";
-import Header from "./Header";
-import SwapTools from "./SwapTools";
-import AlignTools from "./AlignTools";
-import DistributeTools from "./DistributeTools";
-import PositionTools from "./PositionTools";
-import HarveyBallTools from "./HarveyBallTools";
-import SaveSendTools from "./SaveSendTools";
-import StatusBar from "./StatusBar";
-
-interface AppProps {
-  title: string;
-}
+import { useCallback, useRef, useState } from "react";
+import { makeStyles } from "@griffel/react";
+import { tokens } from "../theme/tokens";
+import TitleBar from "./TitleBar";
+import TabBar, { TabKey } from "./TabBar";
+import ErrorBar from "./ErrorBar";
+import ArrangeTab from "./tabs/ArrangeTab";
+import ElementsTab from "./tabs/ElementsTab";
+import ExportTab from "./tabs/ExportTab";
 
 const useStyles = makeStyles({
   root: {
+    maxWidth: "360px",
     minHeight: "100vh",
-    backgroundColor: tokens.colorNeutralBackground1,
-    padding: "12px",
-  },
-  section: {
-    marginBottom: "16px",
-  },
-  sectionTitle: {
-    fontSize: "12px",
-    fontWeight: "600",
-    color: tokens.colorNeutralForeground3,
-    marginBottom: "8px",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
+    margin: "0 auto",
+    backgroundColor: tokens.paneBg,
+    borderLeft: `1px solid ${tokens.border}`,
+    borderRight: `1px solid ${tokens.border}`,
+    display: "flex",
+    flexDirection: "column",
+    color: tokens.textPrimary,
   },
 });
 
-export type StatusType = { message: string; type: "success" | "error" | "info" } | null;
+export type OnError = (message: string) => void;
 
-const App: React.FC<AppProps> = ({ title }) => {
+const App: React.FC = () => {
   const styles = useStyles();
-  const [status, setStatus] = useState<StatusType>(null);
+  const [tab, setTab] = useState<TabKey>("arrange");
+  const [error, setError] = useState<string | null>(null);
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleStatus = (message: string, type: "success" | "error" | "info") => {
-    setStatus({ message, type });
-    setTimeout(() => setStatus(null), 3000);
-  };
+  const onError = useCallback<OnError>((message) => {
+    setError(message);
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    dismissTimer.current = setTimeout(() => setError(null), 4000);
+  }, []);
+
+  // Keep all tabs mounted so field state (margins, export options) survives tab switches.
+  const tabStyle = (key: TabKey): React.CSSProperties => ({
+    display: tab === key ? "flex" : "none",
+    flex: 1,
+    flexDirection: "column",
+  });
 
   return (
     <div className={styles.root}>
-      <Header title={title} />
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Swap Positions</div>
-        <SwapTools onStatus={handleStatus} />
+      <TitleBar />
+      <TabBar active={tab} onChange={setTab} />
+      <div style={tabStyle("arrange")}>
+        <ArrangeTab onError={onError} />
       </div>
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Align</div>
-        <AlignTools onStatus={handleStatus} />
+      <div style={tabStyle("elements")}>
+        <ElementsTab onError={onError} />
       </div>
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Distribute</div>
-        <DistributeTools onStatus={handleStatus} />
+      <div style={tabStyle("export")}>
+        <ExportTab onError={onError} />
       </div>
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Position</div>
-        <PositionTools onStatus={handleStatus} />
-      </div>
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Harvey Balls</div>
-        <HarveyBallTools onStatus={handleStatus} />
-      </div>
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Save & Send</div>
-        <SaveSendTools onStatus={handleStatus} />
-      </div>
-      <StatusBar status={status} />
+      <ErrorBar error={error} />
     </div>
   );
 };

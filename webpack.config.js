@@ -48,6 +48,13 @@ module.exports = (env, options) => {
             filename: "assets/[name][ext]",
           },
         },
+        {
+          test: /\.(woff2?|ttf)$/,
+          type: "asset/resource",
+          generator: {
+            filename: "assets/fonts/[name][ext]",
+          },
+        },
       ],
     },
     plugins: [

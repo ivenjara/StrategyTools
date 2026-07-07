@@ -2,16 +2,16 @@
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { FluentProvider, webLightTheme } from "@fluentui/react-components";
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/ibm-plex-sans/700.css";
+import "./global.css";
 import App from "./components/App";
 
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement!);
 
 Office.onReady(() => {
-  root.render(
-    <FluentProvider theme={webLightTheme}>
-      <App title="Nightshift" />
-    </FluentProvider>
-  );
+  root.render(<App />);
 });

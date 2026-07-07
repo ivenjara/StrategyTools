@@ -2,6 +2,15 @@
 
 import { ShapePositionData } from "./types";
 
+/** Shape types that can hold a text frame (safe to touch shape.textFrame). */
+export const TEXT_CAPABLE_SHAPE_TYPES = new Set<string>([
+  "GeometricShape",
+  "TextBox",
+  "Callout",
+  "Freeform",
+  "Placeholder",
+]);
+
 /**
  * Loads selected shapes within an existing PowerPoint.run context.
  * Returns the shape items and their position data.

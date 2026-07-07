@@ -12,8 +12,8 @@
     "validate": "npx office-addin-manifest validate manifest.xml"
   },
   "dependencies": {
-    "@fluentui/react-components": "^9.54.0",
-    "@fluentui/react-icons": "^2.0.245",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@griffel/react": "^1.7.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

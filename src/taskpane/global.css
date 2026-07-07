@@ -1,0 +1,29 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #14171f;
+  color-scheme: dark;
+}
+
+body {
+  font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  color: #e7eaf3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #5a6078;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+select {
+  font-family: inherit;
+}
