@@ -24,6 +24,21 @@ const SPLIT_PATTERNS: Record<SplitSeparatorKey, RegExp> = {
   pipe: /\s*\|\s*/,
 };
 
+/**
+ * Table values are serialized into slide XML, where control characters
+ * (notably \x0B, PowerPoint's soft line break) are invalid and make
+ * addTable throw InvalidArgument. Normalize breaks to \n and strip the
+ * rest. `flattenNewlines` additionally collapses newlines to spaces for
+ * the retry path on hosts that reject multi-line cell values.
+ */
+function sanitizeCell(text: string, flattenNewlines: boolean): string {
+  const normalized = text
+    .replace(/\r\n|\r|\x0B/g, "\n")
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x08\x0C\x0E-\x1F\x7F]/g, "");
+  return flattenNewlines ? normalized.replace(/\n+/g, " ").trim() : normalized;
+}
+
 /** Lines become rows; ragged rows are padded with "". */
 function parseLinesToValues(text: string, separator: SplitSeparatorKey): string[][] {
   // \r = paragraph break, \x0B = soft line break in PowerPoint text ranges.
@@ -84,6 +99,19 @@ export async function convertTextToTable(separator: SplitSeparatorKey = "tab"): 
     throw new Error("Table creation requires PowerPointApi 1.8 or later. Please update PowerPoint.");
   }
 
+  try {
+    return await runConversion(separator, false);
+  } catch (err: unknown) {
+    // Nothing is created or deleted when addTable rejects the values, so a
+    // retry with newline-free cells is safe and can't duplicate the table.
+    if ((err as { code?: string })?.code === "InvalidArgument") {
+      return runConversion(separator, true);
+    }
+    throw err;
+  }
+}
+
+async function runConversion(separator: SplitSeparatorKey, flattenNewlines: boolean): Promise<TextToTableResult> {
   return PowerPoint.run(async (context) => {
     const selected = context.presentation.getSelectedShapes();
     selected.load("items/id,items/type,items/left,items/top,items/width,items/height");
@@ -164,6 +192,8 @@ export async function convertTextToTable(separator: SplitSeparatorKey = "tab"): 
       boundaries.push(right);
       columnWidths = colClusters.map((_, c) => Math.max(boundaries[c + 1] - boundaries[c], 10));
     }
+
+    values = values.map((row) => row.map((cell) => sanitizeCell(cell, flattenNewlines)));
 
     const slide = textBoxes[0].getParentSlide();
     slide.shapes.addTable(values.length, values[0].length, {
