@@ -12,12 +12,13 @@ export type StyleAspect = "fill" | "border" | "font" | "all";
 export async function makeSame(aspect: StyleAspect): Promise<void> {
   await PowerPoint.run(async (context) => {
     const selected = context.presentation.getSelectedShapes();
-    const count = selected.getCount();
     selected.load("items/id,items/type");
     await context.sync();
 
-    if (count.value < 2) {
-      throw new Error(`Select at least 2 shapes — the last-selected shape is the reference. You selected ${count.value}.`);
+    if (selected.items.length < 2) {
+      throw new Error(
+        `Select at least 2 shapes — the last-selected shape is the reference. You selected ${selected.items.length}.`
+      );
     }
 
     const items = selected.items;

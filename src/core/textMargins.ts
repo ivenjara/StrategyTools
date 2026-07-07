@@ -22,11 +22,10 @@ export async function applyTextMargins(margins: MarginsCm): Promise<number> {
 
   return PowerPoint.run(async (context) => {
     const selected = context.presentation.getSelectedShapes();
-    const count = selected.getCount();
     selected.load("items/id,items/type");
     await context.sync();
 
-    if (count.value < 1) {
+    if (selected.items.length < 1) {
       throw new Error("Select at least 1 shape or table.");
     }
 
@@ -61,25 +60,34 @@ export async function applyTextMargins(margins: MarginsCm): Promise<number> {
       });
       await context.sync();
 
-      // Collect cells first (merged areas return null objects for covered cells).
-      const cells: PowerPoint.TableCell[] = [];
+      // Load and write cells in chunks — one giant batch across a large
+      // table stalls PowerPoint web. Merged areas return null objects for
+      // covered cells, hence the isNullObject guard.
+      const CHUNK_SIZE = 25;
       for (const table of tables) {
+        const coords: [number, number][] = [];
         for (let r = 0; r < table.rowCount; r++) {
           for (let c = 0; c < table.columnCount; c++) {
-            const cell = table.getCellOrNullObject(r, c);
-            cell.load("isNullObject");
-            cells.push(cell);
+            coords.push([r, c]);
           }
         }
-      }
-      await context.sync();
+        for (let i = 0; i < coords.length; i += CHUNK_SIZE) {
+          const batch = coords.slice(i, i + CHUNK_SIZE).map(([r, c]) => {
+            const cell = table.getCellOrNullObject(r, c);
+            cell.load("isNullObject");
+            return cell;
+          });
+          await context.sync();
 
-      for (const cell of cells) {
-        if (cell.isNullObject) continue;
-        cell.margins.left = leftPt;
-        cell.margins.right = rightPt;
-        cell.margins.top = topPt;
-        cell.margins.bottom = bottomPt;
+          for (const cell of batch) {
+            if (cell.isNullObject) continue;
+            cell.margins.left = leftPt;
+            cell.margins.right = rightPt;
+            cell.margins.top = topPt;
+            cell.margins.bottom = bottomPt;
+          }
+          await context.sync();
+        }
       }
     }
 
