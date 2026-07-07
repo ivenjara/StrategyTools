@@ -26,6 +26,13 @@ const useStyles = makeStyles({
     alignItems: "flex-end",
     gap: "6px",
   },
+  applyRow: {
+    display: "flex",
+    gap: "6px",
+  },
+  applyGrow: {
+    flex: 1,
+  },
   linkButton: {
     width: "30px",
     height: "30px",
@@ -78,13 +85,27 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
     setApplied(false);
   };
 
-  const apply = async () => {
+  const apply = async (values: MarginsCm = margins) => {
     try {
-      await applyTextMargins(margins);
+      await applyTextMargins(values);
       setApplied(true);
     } catch (err: unknown) {
+      setApplied(false);
       onError(err instanceof Error ? err.message : "Applying margins failed");
     }
+  };
+
+  /** Shifts all four margins by `delta` cm and applies immediately. */
+  const nudge = async (delta: number) => {
+    const shift = (v: number) => Math.max(0, Math.round((v + delta) * 100) / 100);
+    const next: MarginsCm = {
+      left: shift(margins.left),
+      right: shift(margins.right),
+      top: shift(margins.top),
+      bottom: shift(margins.bottom),
+    };
+    setMargins(next);
+    await apply(next);
   };
 
   return (
@@ -131,13 +152,35 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
             <LinkIcon />
           </button>
         </div>
-        <EmphasizedButton
-          height={36}
-          onClick={apply}
-          title="Applies to selected shapes and all cells of selected tables"
-        >
-          Apply to selected shapes
-        </EmphasizedButton>
+        <div className={styles.applyRow}>
+          <GridButton
+            title="Decrease all margins by 0.05 cm and apply"
+            height={36}
+            fontSize="16px"
+            onClick={() => nudge(-0.05)}
+            style={{ width: "36px", flexShrink: 0 }}
+          >
+            −
+          </GridButton>
+          <GridButton
+            title="Increase all margins by 0.05 cm and apply"
+            height={36}
+            fontSize="16px"
+            onClick={() => nudge(0.05)}
+            style={{ width: "36px", flexShrink: 0 }}
+          >
+            +
+          </GridButton>
+          <div className={styles.applyGrow}>
+            <EmphasizedButton
+              height={36}
+              onClick={() => apply()}
+              title="Applies to selected shapes and all cells of selected tables"
+            >
+              Apply to selected shapes
+            </EmphasizedButton>
+          </div>
+        </div>
       </div>
     </div>
   );
