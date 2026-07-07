@@ -131,7 +131,11 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
             <LinkIcon />
           </button>
         </div>
-        <EmphasizedButton height={36} onClick={apply}>
+        <EmphasizedButton
+          height={36}
+          onClick={apply}
+          title="Applies to selected shapes and all cells of selected tables"
+        >
           Apply to selected shapes
         </EmphasizedButton>
       </div>
