@@ -6,6 +6,9 @@ import { ShapePositionData } from "./types";
 
 const CHUNK_SIZE = 25;
 
+/** Reports overall progress as a fraction in [0, 1]. */
+export type TableToolProgress = (fraction: number) => void;
+
 /** Cumulative offsets for a list of sizes, starting at 0. */
 function offsets(sizes: number[]): number[] {
   const result: number[] = [0];
@@ -66,24 +69,27 @@ interface CellStyle {
  * refused. The original table is deleted only after the transposed one
  * is created.
  */
-export async function transposeTable(): Promise<{ rows: number; columns: number }> {
+export async function transposeTable(onProgress?: TableToolProgress): Promise<{ rows: number; columns: number }> {
   if (!Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) {
     throw new Error("Table transposing requires PowerPointApi 1.8 or later. Please update PowerPoint.");
   }
 
   try {
-    return await runTranspose(false);
+    return await runTranspose(false, onProgress);
   } catch (err: unknown) {
     // Nothing is created or deleted when addTable rejects its options;
     // retry without per-column widths and cell formatting (web quirk).
     if ((err as { code?: string })?.code === "InvalidArgument") {
-      return runTranspose(true);
+      return runTranspose(true, onProgress);
     }
     throw err;
   }
 }
 
-async function runTranspose(degraded: boolean): Promise<{ rows: number; columns: number }> {
+async function runTranspose(
+  degraded: boolean,
+  onProgress?: TableToolProgress
+): Promise<{ rows: number; columns: number }> {
   const hasCellReads = Office.context.requirements.isSetSupported("PowerPointApi", "1.9");
 
   return PowerPoint.run(async (context) => {
@@ -105,10 +111,12 @@ async function runTranspose(degraded: boolean): Promise<{ rows: number; columns:
     if (mergedAreas.items.some((c) => c.rowCount > 1 || c.columnCount > 1)) {
       throw new Error("This table has merged cells — unmerge them first, then transpose.");
     }
+    onProgress?.(0.1);
 
     const rowCount = table.rowCount;
     const columnCount = table.columnCount;
     const { rowHeights } = await getTableGeometry(context, tableShape, table);
+    onProgress?.(0.2);
 
     // Per-cell formatting, chunked. Best-effort: skipped entirely on
     // hosts without 1.9 or in the degraded retry.
@@ -132,6 +140,7 @@ async function runTranspose(degraded: boolean): Promise<{ rows: number; columns:
             );
           }
           await context.sync();
+          onProgress?.(0.2 + 0.6 * (Math.min(i + CHUNK_SIZE, flat.length) / flat.length));
         }
         styles = [];
         for (let r = 0; r < rowCount; r++) {
@@ -192,8 +201,10 @@ async function runTranspose(degraded: boolean): Promise<{ rows: number; columns:
 
     // Create the new table first so a failure never destroys the original.
     await context.sync();
+    onProgress?.(0.9);
     tableShape.delete();
     await context.sync();
+    onProgress?.(1);
 
     return { rows: columnCount, columns: rowCount };
   });
@@ -204,11 +215,12 @@ async function runTranspose(degraded: boolean): Promise<{ rows: number; columns:
  * over. The table comes from the selection, or from the slide when it
  * holds exactly one table. Returns the number of shapes moved.
  */
-export async function alignShapesToCells(): Promise<number> {
+export async function alignShapesToCells(onProgress?: TableToolProgress): Promise<number> {
   return PowerPoint.run(async (context) => {
     const selected = context.presentation.getSelectedShapes();
     selected.load("items/id,items/type,items/left,items/top,items/width,items/height");
     await context.sync();
+    onProgress?.(0.2);
 
     if (selected.items.length === 0) {
       throw new Error("Select the shapes to align (and the table, if the slide has several).");
@@ -233,11 +245,13 @@ export async function alignShapesToCells(): Promise<number> {
       }
       tableShape = tables[0];
     }
+    onProgress?.(0.4);
 
     const table = tableShape.getTable();
     table.load("rowCount,columnCount");
     await context.sync();
     const { columnWidths, rowHeights } = await getTableGeometry(context, tableShape, table);
+    onProgress?.(0.6);
     const columnOffsets = offsets(columnWidths);
     const rowOffsets = offsets(rowHeights);
 
@@ -269,7 +283,9 @@ export async function alignShapesToCells(): Promise<number> {
     }
 
     const moving = movable.filter((s) => newPositions.has(s.id));
+    onProgress?.(0.8);
     await writePositionsWithRefresh(moving, newPositions, context);
+    onProgress?.(1);
     return newPositions.size;
   });
 }

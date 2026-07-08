@@ -4,6 +4,7 @@ import { makeStyles } from "@griffel/react";
 import { tokens } from "../../theme/tokens";
 import SectionHeader from "../primitives/SectionHeader";
 import EmphasizedButton from "../primitives/EmphasizedButton";
+import ProgressBar from "../primitives/ProgressBar";
 import { TextField } from "../primitives/fields";
 import { scanFonts, applyFontEverywhere, FontScanResult } from "../../../core/fontConsistency";
 import { useTransientStatus } from "../useTransientStatus";
@@ -45,19 +46,6 @@ const useStyles = makeStyles({
   helper: {
     fontSize: "11.5px",
     color: tokens.textFaint,
-  },
-  barTrack: {
-    height: "4px",
-    backgroundColor: tokens.inputBg,
-    border: `1px solid ${tokens.borderControl}`,
-    borderRadius: "2px",
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    backgroundColor: tokens.accent,
-    transitionProperty: "width",
-    transitionDuration: "200ms",
   },
 });
 
@@ -126,11 +114,7 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
         <EmphasizedButton height={34} onClick={handleScan} disabled={busy} title="List every font used on the slides">
           {isScanning ? `Scanning… ${Math.round((progress ?? 0) * 100)}%` : "Scan fonts across deck"}
         </EmphasizedButton>
-        {busy && (
-          <div className={styles.barTrack}>
-            <div className={styles.barFill} style={{ width: `${Math.round((progress ?? 0) * 100)}%` }} />
-          </div>
-        )}
+        {busy && <ProgressBar fraction={progress ?? 0} />}
         {scan && (
           <>
             {scan.fonts.length === 0 ? (

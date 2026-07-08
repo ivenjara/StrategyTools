@@ -4,6 +4,7 @@ import { makeStyles } from "@griffel/react";
 import { tokens } from "../../theme/tokens";
 import SectionHeader from "../primitives/SectionHeader";
 import GridButton from "../primitives/GridButton";
+import ProgressBar from "../primitives/ProgressBar";
 import { TransposeIcon, AlignToCellIcon } from "../primitives/icons";
 import { transposeTable, alignShapesToCells } from "../../../core/tableTools";
 import { useTransientStatus } from "../useTransientStatus";
@@ -26,34 +27,41 @@ const useStyles = makeStyles({
     color: tokens.textFaint,
     marginTop: "8px",
   },
+  bar: {
+    marginTop: "6px",
+  },
 });
 
 const TableToolsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
   const styles = useStyles();
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<"transpose" | "align" | null>(null);
+  const [progress, setProgress] = useState(0);
   const [status, showStatus] = useTransientStatus(3000);
+  const busy = busyAction !== null;
 
   const handleTranspose = async () => {
-    setBusy(true);
+    setBusyAction("transpose");
+    setProgress(0);
     try {
-      const result = await transposeTable();
+      const result = await transposeTable(setProgress);
       showStatus(`Transposed to ${result.rows}×${result.columns} ✓`);
     } catch (err: unknown) {
       onError(err instanceof Error ? err.message : "Transpose failed");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
   const handleAlign = async () => {
-    setBusy(true);
+    setBusyAction("align");
+    setProgress(0);
     try {
-      const moved = await alignShapesToCells();
+      const moved = await alignShapesToCells(setProgress);
       showStatus(`Aligned ${moved} ✓`);
     } catch (err: unknown) {
       onError(err instanceof Error ? err.message : "Aligning shapes failed");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
@@ -71,7 +79,7 @@ const TableToolsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
           <span className={styles.icon}>
             <TransposeIcon />
           </span>
-          <span>Transpose</span>
+          <span>{busyAction === "transpose" ? "Transposing…" : "Transpose"}</span>
         </GridButton>
         <GridButton
           title="Center selected shapes inside the table cells beneath them"
@@ -83,9 +91,14 @@ const TableToolsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
           <span className={styles.icon}>
             <AlignToCellIcon />
           </span>
-          <span>Align to Cells</span>
+          <span>{busyAction === "align" ? "Aligning…" : "Align to Cells"}</span>
         </GridButton>
       </div>
+      {busy && (
+        <div className={styles.bar}>
+          <ProgressBar fraction={progress} />
+        </div>
+      )}
       <div className={styles.helper}>
         Transpose swaps rows and columns. Align centers selected shapes in the cells beneath them.
       </div>
