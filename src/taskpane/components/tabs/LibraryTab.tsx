@@ -197,7 +197,25 @@ const useStyles = makeStyles({
     color: tokens.textFaint,
     marginTop: "6px",
   },
+  storageLine: {
+    fontSize: "11px",
+    color: tokens.textFaint,
+    marginTop: "3px",
+  },
+  storageLineWarn: {
+    color: tokens.warn,
+  },
 });
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+/** Export/import serializes the whole library into one JSON string; past this it gets slow. */
+const LIBRARY_SIZE_WARN_BYTES = 80 * 1024 * 1024;
 
 function formatSavedDate(savedAt: number): string {
   const date = new Date(savedAt);
@@ -225,6 +243,26 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   const [libStatus, showLibStatus] = useTransientStatus();
   const fileRef = useRef<HTMLInputElement>(null);
   const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [quota, setQuota] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator.storage?.estimate) {
+      navigator.storage
+        .estimate()
+        .then((estimate) => setQuota(estimate.quota ?? null))
+        .catch(() => setQuota(null));
+    }
+  }, []);
+
+  // base64/PNG strings are ASCII, so string length ≈ stored bytes.
+  const librarySize = useMemo(
+    () =>
+      (entries ?? []).reduce(
+        (sum, e) => sum + e.base64.length + (e.thumbnails ?? []).reduce((s, t) => s + t.length, 0),
+        0
+      ),
+    [entries]
+  );
 
   useEffect(() => {
     listEntries()
@@ -528,6 +566,18 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
           onChange={handleImportFile}
         />
         <div className={styles.hint}>Library is stored on this device only. Export to back up or move it.</div>
+        {count > 0 && (
+          <div
+            className={mergeClasses(
+              styles.storageLine,
+              librarySize > LIBRARY_SIZE_WARN_BYTES && styles.storageLineWarn
+            )}
+          >
+            Using {formatBytes(librarySize)}
+            {quota !== null ? ` of ${formatBytes(quota)} available` : ""}
+            {librarySize > LIBRARY_SIZE_WARN_BYTES ? " — large libraries export slowly; consider pruning." : ""}
+          </div>
+        )}
       </div>
     </div>
   );
