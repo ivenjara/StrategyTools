@@ -46,6 +46,19 @@ const useStyles = makeStyles({
     fontSize: "11.5px",
     color: tokens.textFaint,
   },
+  barTrack: {
+    height: "4px",
+    backgroundColor: tokens.inputBg,
+    border: `1px solid ${tokens.borderControl}`,
+    borderRadius: "2px",
+    overflow: "hidden",
+  },
+  barFill: {
+    height: "100%",
+    backgroundColor: tokens.accent,
+    transitionProperty: "width",
+    transitionDuration: "200ms",
+  },
 });
 
 const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => {
@@ -54,10 +67,10 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
   const [target, setTarget] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
-  const [progress, setProgress] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
   const [status, showStatus] = useTransientStatus(3500);
 
-  const onProgress = (done: number, total: number) => setProgress(`${done}/${total}`);
+  const onProgress = (fraction: number) => setProgress(fraction);
 
   const handleScan = async () => {
     setIsScanning(true);
@@ -111,8 +124,13 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
       />
       <div className={styles.column}>
         <EmphasizedButton height={34} onClick={handleScan} disabled={busy} title="List every font used on the slides">
-          {isScanning ? `Scanning… ${progress ?? ""}` : "Scan fonts across deck"}
+          {isScanning ? `Scanning… ${Math.round((progress ?? 0) * 100)}%` : "Scan fonts across deck"}
         </EmphasizedButton>
+        {busy && (
+          <div className={styles.barTrack}>
+            <div className={styles.barFill} style={{ width: `${Math.round((progress ?? 0) * 100)}%` }} />
+          </div>
+        )}
         {scan && (
           <>
             {scan.fonts.length === 0 ? (
@@ -148,7 +166,7 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
                   disabled={busy || !target.trim()}
                   title="Sets the font family everywhere; sizes, weights, and colors stay as they are"
                 >
-                  {isApplying ? `Applying… ${progress ?? ""}` : "Apply to all slides"}
+                  {isApplying ? `Applying… ${Math.round((progress ?? 0) * 100)}%` : "Apply to all slides"}
                 </EmphasizedButton>
               </>
             )}

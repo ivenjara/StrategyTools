@@ -13,8 +13,11 @@ export interface FontScanResult {
 
 const CHUNK_SIZE = 25;
 
-/** Called after each processed chunk with (done, total) element counts. */
-export type FontProgress = (done: number, total: number) => void;
+/** Reports overall progress as a fraction in [0, 1]. */
+export type FontProgress = (fraction: number) => void;
+
+// Fraction of the bar given to the traversal phase vs the font pass.
+const COLLECT_WEIGHT = 0.35;
 
 const STALL_MESSAGE =
   "PowerPoint stopped responding to the operation. Refresh the pane and try again — changes may be partially applied, and re-running is safe.";
@@ -43,8 +46,13 @@ async function withStallGuard<T>(work: Promise<T>, ms = 120000): Promise<T> {
  * Grouped shapes and slide masters/layouts are out of scope.
  * All loads are chunked — large single batches stall PowerPoint web.
  */
-async function collectFontHolders(context: PowerPoint.RequestContext): Promise<PowerPoint.ShapeFont[]> {
+async function collectFontHolders(
+  context: PowerPoint.RequestContext,
+  onProgress?: FontProgress
+): Promise<PowerPoint.ShapeFont[]> {
   const hasTableFonts = Office.context.requirements.isSetSupported("PowerPointApi", "1.9");
+  // Traversal budget: 70% for slide shape-lists, 30% for table cells.
+  const report = (fraction: number) => onProgress?.(Math.min(1, fraction) * COLLECT_WEIGHT);
 
   const slides = context.presentation.slides;
   slides.load("items");
@@ -57,6 +65,7 @@ async function collectFontHolders(context: PowerPoint.RequestContext): Promise<P
       slide.shapes.load("items/id,items/type");
     }
     await context.sync();
+    report((0.7 * Math.min(i + 10, slides.items.length)) / Math.max(1, slides.items.length));
   }
 
   const holders: PowerPoint.ShapeFont[] = [];
@@ -80,7 +89,8 @@ async function collectFontHolders(context: PowerPoint.RequestContext): Promise<P
       await context.sync();
     }
 
-    for (const table of tables) {
+    for (let t = 0; t < tables.length; t++) {
+      const table = tables[t];
       const cells: PowerPoint.TableCell[] = [];
       for (let r = 0; r < table.rowCount; r++) {
         for (let c = 0; c < table.columnCount; c++) {
@@ -97,9 +107,11 @@ async function collectFontHolders(context: PowerPoint.RequestContext): Promise<P
           if (!cell.isNullObject) holders.push(cell.font);
         }
       }
+      report(0.7 + (0.3 * (t + 1)) / tables.length);
     }
   }
 
+  report(1);
   return holders;
 }
 
@@ -108,14 +120,16 @@ async function collectFontHolders(context: PowerPoint.RequestContext): Promise<P
  */
 export async function scanFonts(onProgress?: FontProgress): Promise<FontScanResult> {
   return withStallGuard(PowerPoint.run(async (context) => {
-    const holders = await collectFontHolders(context);
+    const holders = await collectFontHolders(context, onProgress);
 
     for (let i = 0; i < holders.length; i += CHUNK_SIZE) {
       for (const font of holders.slice(i, i + CHUNK_SIZE)) {
         font.load("name");
       }
       await context.sync();
-      onProgress?.(Math.min(i + CHUNK_SIZE, holders.length), holders.length);
+      onProgress?.(
+        COLLECT_WEIGHT + (1 - COLLECT_WEIGHT) * (Math.min(i + CHUNK_SIZE, holders.length) / Math.max(1, holders.length))
+      );
     }
 
     const counts = new Map<string, number>();
@@ -148,14 +162,16 @@ export async function applyFontEverywhere(fontName: string, onProgress?: FontPro
   }
 
   return withStallGuard(PowerPoint.run(async (context) => {
-    const holders = await collectFontHolders(context);
+    const holders = await collectFontHolders(context, onProgress);
 
     for (let i = 0; i < holders.length; i += CHUNK_SIZE) {
       for (const font of holders.slice(i, i + CHUNK_SIZE)) {
         font.name = trimmed;
       }
       await context.sync();
-      onProgress?.(Math.min(i + CHUNK_SIZE, holders.length), holders.length);
+      onProgress?.(
+        COLLECT_WEIGHT + (1 - COLLECT_WEIGHT) * (Math.min(i + CHUNK_SIZE, holders.length) / Math.max(1, holders.length))
+      );
     }
 
     return holders.length;
