@@ -27,7 +27,13 @@ const useStyles = makeStyles({
     padding: "16px",
     display: "flex",
     flexDirection: "column",
-    gap: "16px",
+    gap: "14px",
+    "& > div + div": {
+      borderTopWidth: "1px",
+      borderTopStyle: "solid",
+      borderTopColor: tokens.borderControl,
+      paddingTop: "14px",
+    },
   },
   exportControls: {
     display: "flex",

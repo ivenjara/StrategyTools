@@ -1,5 +1,6 @@
 import * as React from "react";
 import { makeStyles } from "@griffel/react";
+import { tokens } from "../../theme/tokens";
 import AlignDistributeSection from "../sections/AlignDistributeSection";
 import MatchSizeSection from "../sections/MatchSizeSection";
 import MakeSameSection from "../sections/MakeSameSection";
@@ -14,7 +15,13 @@ const useStyles = makeStyles({
     padding: "16px",
     display: "flex",
     flexDirection: "column",
-    gap: "16px",
+    gap: "14px",
+    "& > div + div": {
+      borderTopWidth: "1px",
+      borderTopStyle: "solid",
+      borderTopColor: tokens.borderControl,
+      paddingTop: "14px",
+    },
   },
 });
 

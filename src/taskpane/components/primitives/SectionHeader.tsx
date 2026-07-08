@@ -10,10 +10,10 @@ const useStyles = makeStyles({
     marginBottom: "10px",
   },
   label: {
-    fontSize: "10.5px",
-    fontWeight: 600,
-    letterSpacing: "1px",
-    color: tokens.textMuted,
+    fontSize: "12.5px",
+    fontWeight: 700,
+    letterSpacing: "0.6px",
+    color: tokens.textSecondary,
     textTransform: "uppercase",
   },
   right: {

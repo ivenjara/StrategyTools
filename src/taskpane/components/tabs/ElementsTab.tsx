@@ -1,5 +1,6 @@
 import * as React from "react";
 import { makeStyles } from "@griffel/react";
+import { tokens } from "../../theme/tokens";
 import HarveyBallSection from "../sections/HarveyBallSection";
 import TableTextSection from "../sections/TableTextSection";
 import TableToolsSection from "../sections/TableToolsSection";
@@ -11,7 +12,13 @@ const useStyles = makeStyles({
     padding: "16px",
     display: "flex",
     flexDirection: "column",
-    gap: "16px",
+    gap: "14px",
+    "& > div + div": {
+      borderTopWidth: "1px",
+      borderTopStyle: "solid",
+      borderTopColor: tokens.borderControl,
+      paddingTop: "14px",
+    },
   },
 });
 
