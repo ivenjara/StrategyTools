@@ -82,7 +82,7 @@ const TableToolsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
           <span>{busyAction === "transpose" ? "Transposing…" : "Transpose"}</span>
         </GridButton>
         <GridButton
-          title="Center selected shapes inside the table cells beneath them"
+          title="Center selected shapes in their cells — or select just the table to re-snap everything on it"
           height={36}
           fontSize="12.5px"
           disabled={busy}
@@ -100,7 +100,8 @@ const TableToolsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
         </div>
       )}
       <div className={styles.helper}>
-        Transpose swaps rows and columns. Align centers selected shapes in the cells beneath them.
+        Transpose swaps rows and columns. Align centers selected shapes in the cells beneath them — after moving a
+        table, select just the table and click Align to re-snap everything on it.
       </div>
     </div>
   );

@@ -213,7 +213,9 @@ async function runTranspose(
 /**
  * Centers each selected shape inside the table cell its center sits
  * over. The table comes from the selection, or from the slide when it
- * holds exactly one table. Returns the number of shapes moved.
+ * holds exactly one table. Selecting ONLY a table re-snaps every
+ * cell-sized shape on the slide that sits over it (the "moved the
+ * table, fix everything" mode). Returns the number of shapes moved.
  */
 export async function alignShapesToCells(onProgress?: TableToolProgress): Promise<number> {
   return PowerPoint.run(async (context) => {
@@ -223,16 +225,25 @@ export async function alignShapesToCells(onProgress?: TableToolProgress): Promis
     onProgress?.(0.2);
 
     if (selected.items.length === 0) {
-      throw new Error("Select the shapes to align (and the table, if the slide has several).");
-    }
-
-    const movable = selected.items.filter((s) => s.type !== "Table");
-    if (movable.length === 0) {
-      throw new Error("Select the shapes to align along with the table.");
+      throw new Error("Select shapes to align — or just the table to re-snap everything on it.");
     }
 
     let tableShape = selected.items.find((s) => s.type === "Table");
-    if (!tableShape) {
+    let movable = selected.items.filter((s) => s.type !== "Table");
+    // Table-only mode: only shapes the user picked are moved otherwise,
+    // so here we sweep the slide but skip anything bigger than a cell
+    // (titles, background boxes) to avoid mangling the layout.
+    const tableOnlyMode = movable.length === 0 && !!tableShape;
+
+    if (tableOnlyMode) {
+      const slide = tableShape!.getParentSlide();
+      slide.shapes.load("items/id,items/type,items/left,items/top,items/width,items/height");
+      await context.sync();
+      movable = slide.shapes.items.filter((s) => s.type !== "Table");
+      if (movable.length === 0) {
+        throw new Error("No shapes on this slide to align.");
+      }
+    } else if (!tableShape) {
       const slide = movable[0].getParentSlide();
       slide.shapes.load("items/id,items/type,items/left,items/top,items/width,items/height");
       await context.sync();
@@ -247,10 +258,10 @@ export async function alignShapesToCells(onProgress?: TableToolProgress): Promis
     }
     onProgress?.(0.4);
 
-    const table = tableShape.getTable();
+    const table = tableShape!.getTable();
     table.load("rowCount,columnCount");
     await context.sync();
-    const { columnWidths, rowHeights } = await getTableGeometry(context, tableShape, table);
+    const { columnWidths, rowHeights } = await getTableGeometry(context, tableShape!, table);
     onProgress?.(0.6);
     const columnOffsets = offsets(columnWidths);
     const rowOffsets = offsets(rowHeights);
@@ -266,20 +277,27 @@ export async function alignShapesToCells(onProgress?: TableToolProgress): Promis
 
     const newPositions = new Map<string, Partial<ShapePositionData>>();
     for (const shape of movable) {
-      const centerX = shape.left + shape.width / 2 - tableShape.left;
-      const centerY = shape.top + shape.height / 2 - tableShape.top;
+      const centerX = shape.left + shape.width / 2 - tableShape!.left;
+      const centerY = shape.top + shape.height / 2 - tableShape!.top;
       const col = cellIndex(centerX, columnOffsets, columnWidths);
       const row = cellIndex(centerY, rowOffsets, rowHeights);
       if (col === null || row === null) continue; // shape isn't over the table
 
+      // In the slide-wide sweep, leave anything bigger than its cell alone.
+      if (tableOnlyMode && (shape.width > columnWidths[col] * 1.05 || shape.height > rowHeights[row] * 1.05)) {
+        continue;
+      }
+
       newPositions.set(shape.id, {
-        left: tableShape.left + columnOffsets[col] + columnWidths[col] / 2 - shape.width / 2,
-        top: tableShape.top + rowOffsets[row] + rowHeights[row] / 2 - shape.height / 2,
+        left: tableShape!.left + columnOffsets[col] + columnWidths[col] / 2 - shape.width / 2,
+        top: tableShape!.top + rowOffsets[row] + rowHeights[row] / 2 - shape.height / 2,
       });
     }
 
     if (newPositions.size === 0) {
-      throw new Error("No selected shapes sit over the table.");
+      throw new Error(
+        tableOnlyMode ? "No cell-sized shapes sit over the table." : "No selected shapes sit over the table."
+      );
     }
 
     const moving = movable.filter((s) => newPositions.has(s.id));
