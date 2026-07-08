@@ -29,12 +29,12 @@ const ArrangeTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   const styles = useStyles();
   return (
     <div className={styles.root}>
-      <AlignDistributeSection onError={onError} />
+      <SwapSection onError={onError} />
+      <PositionClipboardSection onError={onError} />
       <MatchSizeSection onError={onError} />
       <MakeSameSection onError={onError} />
       <TextMarginsSection onError={onError} />
-      <SwapSection onError={onError} />
-      <PositionClipboardSection onError={onError} />
+      <AlignDistributeSection onError={onError} />
     </div>
   );
 };
