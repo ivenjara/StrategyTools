@@ -3,7 +3,7 @@ import { makeStyles } from "@griffel/react";
 import { tokens } from "../theme/tokens";
 import { TabArrangeIcon, TabElementsIcon, TabExportIcon } from "./primitives/icons";
 
-export type TabKey = "arrange" | "elements" | "export";
+export type TabKey = "arrange" | "elements" | "finalize";
 
 const useStyles = makeStyles({
   root: {
@@ -43,7 +43,7 @@ const useStyles = makeStyles({
 const TABS: { key: TabKey; label: string; icon: React.FC }[] = [
   { key: "arrange", label: "Arrange", icon: TabArrangeIcon },
   { key: "elements", label: "Elements", icon: TabElementsIcon },
-  { key: "export", label: "Export", icon: TabExportIcon },
+  { key: "finalize", label: "Finalize", icon: TabExportIcon },
 ];
 
 const TabBar: React.FC<{ active: TabKey; onChange: (tab: TabKey) => void }> = ({ active, onChange }) => {

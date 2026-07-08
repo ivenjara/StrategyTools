@@ -2,8 +2,10 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { makeStyles, shorthands } from "@griffel/react";
 import { tokens } from "../../theme/tokens";
+import SectionHeader from "../primitives/SectionHeader";
 import PrimaryButton from "../primitives/PrimaryButton";
 import SegmentedControl from "../primitives/SegmentedControl";
+import StatusStampsSection from "../sections/StatusStampsSection";
 import { TextField, Checkbox } from "../primitives/fields";
 import { DownloadIcon, EnvelopeIcon } from "../primitives/icons";
 import {
@@ -22,6 +24,11 @@ const useStyles = makeStyles({
   root: {
     flex: 1,
     padding: "16px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  },
+  exportControls: {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
@@ -61,7 +68,7 @@ const useStyles = makeStyles({
   },
 });
 
-const ExportTab: React.FC<{ onError: OnError }> = ({ onError }) => {
+const FinalizeTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   const styles = useStyles();
   const [fileName, setFileName] = useState("Presentation");
   const [includeDateTime, setIncludeDateTime] = useState(false);
@@ -121,37 +128,43 @@ const ExportTab: React.FC<{ onError: OnError }> = ({ onError }) => {
 
   return (
     <div className={styles.root}>
-      <TextField id="ns-filename" label="File name" value={fileName} onChange={setFileName} />
-      <Checkbox label="Include date and time" checked={includeDateTime} onChange={setIncludeDateTime} />
-      <SegmentedControl
-        options={[
-          { value: "entire", label: "Entire presentation" },
-          { value: "selected", label: "Selected slides" },
-        ]}
-        value={scope}
-        onChange={setScope}
-      />
-      <div className={styles.buttonRow}>
-        <PrimaryButton onClick={handleDownload} disabled={isBusy} title="Download presentation">
-          <DownloadIcon />
-          {isBusy ? "Saving..." : "Download"}
-        </PrimaryButton>
-        <button
-          type="button"
-          className={styles.emailButton}
-          onClick={handleComposeEmail}
-          disabled={isBusy}
-          title="Download and compose email"
-        >
-          <EnvelopeIcon />
-          Email
-        </button>
-      </div>
-      <div className={styles.status} style={{ color: tokens.success }}>
-        {status ?? ""}
+      <StatusStampsSection onError={onError} />
+      <div>
+        <SectionHeader label="Export" />
+        <div className={styles.exportControls}>
+          <TextField id="ns-filename" label="File name" value={fileName} onChange={setFileName} />
+          <Checkbox label="Include date and time" checked={includeDateTime} onChange={setIncludeDateTime} />
+          <SegmentedControl
+            options={[
+              { value: "entire", label: "Entire presentation" },
+              { value: "selected", label: "Selected slides" },
+            ]}
+            value={scope}
+            onChange={setScope}
+          />
+          <div className={styles.buttonRow}>
+            <PrimaryButton onClick={handleDownload} disabled={isBusy} title="Download presentation">
+              <DownloadIcon />
+              {isBusy ? "Saving..." : "Download"}
+            </PrimaryButton>
+            <button
+              type="button"
+              className={styles.emailButton}
+              onClick={handleComposeEmail}
+              disabled={isBusy}
+              title="Download and compose email"
+            >
+              <EnvelopeIcon />
+              Email
+            </button>
+          </div>
+          <div className={styles.status} style={{ color: tokens.success }}>
+            {status ?? ""}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default ExportTab;
+export default FinalizeTab;

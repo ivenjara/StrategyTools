@@ -7,7 +7,7 @@ import TabBar, { TabKey } from "./TabBar";
 import ErrorBar from "./ErrorBar";
 import ArrangeTab from "./tabs/ArrangeTab";
 import ElementsTab from "./tabs/ElementsTab";
-import ExportTab from "./tabs/ExportTab";
+import FinalizeTab from "./tabs/FinalizeTab";
 
 const useStyles = makeStyles({
   root: {
@@ -58,8 +58,8 @@ const App: React.FC = () => {
       <div style={tabStyle("elements")}>
         <ElementsTab onError={onError} />
       </div>
-      <div style={tabStyle("export")}>
-        <ExportTab onError={onError} />
+      <div style={tabStyle("finalize")}>
+        <FinalizeTab onError={onError} />
       </div>
       <ErrorBar error={error} />
     </div>
