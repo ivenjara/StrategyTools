@@ -1,27 +1,21 @@
 import * as React from "react";
-import { makeStyles, shorthands } from "@griffel/react";
+import { makeStyles } from "@griffel/react";
 import { tokens } from "../../theme/tokens";
 import SectionHeader from "../primitives/SectionHeader";
 import GridButton from "../primitives/GridButton";
-import { insertStatusStamp, StampKind } from "../../../core/statusStamps";
+import { insertWipBanner } from "../../../core/statusStamps";
 import { useTransientStatus } from "../useTransientStatus";
 import { OnError } from "../App";
 
 const useStyles = makeStyles({
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "6px",
-  },
   pill: {
-    fontSize: "10.5px",
+    fontSize: "11px",
     fontWeight: 700,
     letterSpacing: "0.8px",
-    padding: "3px 8px",
+    padding: "3px 10px",
     borderRadius: "4px",
-    ...shorthands.borderWidth("1.5px"),
-    ...shorthands.borderStyle("solid"),
-    transform: "rotate(-4deg)",
+    backgroundColor: tokens.danger,
+    color: tokens.paneBg,
   },
   helper: {
     fontSize: "11.5px",
@@ -30,19 +24,13 @@ const useStyles = makeStyles({
   },
 });
 
-const STAMPS: { kind: StampKind; color: string }[] = [
-  { kind: "WIP", color: tokens.warn },
-  { kind: "FINAL", color: tokens.success },
-  { kind: "CONFIDENTIAL", color: tokens.danger },
-];
-
 const StatusStampsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
   const styles = useStyles();
   const [status, showStatus] = useTransientStatus();
 
-  const stamp = async (kind: StampKind) => {
+  const stamp = async () => {
     try {
-      const count = await insertStatusStamp(kind);
+      const count = await insertWipBanner();
       showStatus(`Stamped ${count} slide${count > 1 ? "s" : ""} ✓`);
     } catch (err: unknown) {
       onError(err instanceof Error ? err.message : "Stamping failed");
@@ -51,17 +39,19 @@ const StatusStampsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
 
   return (
     <div>
-      <SectionHeader label="Status Stamps" right={status ?? ""} rightColor={tokens.success} />
-      <div className={styles.grid}>
-        {STAMPS.map(({ kind, color }) => (
-          <GridButton key={kind} title={`Stamp "${kind}"`} height={40} onClick={() => stamp(kind)}>
-            <span className={styles.pill} style={{ color, borderColor: color }}>
-              {kind}
-            </span>
-          </GridButton>
-        ))}
-      </div>
-      <div className={styles.helper}>Stamps the top-right corner of selected slides.</div>
+      <SectionHeader label="WIP Banner" right={status ?? ""} rightColor={tokens.success} />
+      <GridButton
+        title="Adds a red WIP banner across the top of each selected slide"
+        height={40}
+        fontSize="13px"
+        gap="10px"
+        style={{ width: "100%" }}
+        onClick={stamp}
+      >
+        <span className={styles.pill}>WIP</span>
+        <span>Stamp selected slides</span>
+      </GridButton>
+      <div className={styles.helper}>Adds a full-width red banner across the top of selected slides.</div>
     </div>
   );
 };
