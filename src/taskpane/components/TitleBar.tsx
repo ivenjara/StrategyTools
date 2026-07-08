@@ -32,15 +32,6 @@ const useStyles = makeStyles({
     letterSpacing: "0.2px",
     color: tokens.textPrimary,
   },
-  badge: {
-    fontSize: "9.5px",
-    fontWeight: 700,
-    letterSpacing: "0.7px",
-    color: tokens.paneBg,
-    backgroundColor: tokens.accent,
-    padding: "2px 6px",
-    borderRadius: "3px",
-  },
   right: {
     display: "flex",
     alignItems: "center",
@@ -80,7 +71,6 @@ const TitleBar: React.FC<TitleBarProps> = ({ theme, onToggleTheme }) => {
       <div className={styles.left}>
         <span className={styles.logoTile}>{isDark ? <MoonGlyph /> : <SunGlyph />}</span>
         <span className={styles.title}>{isDark ? "Nightshift" : "Dayshift"}</span>
-        <span className={styles.badge}>MVP</span>
       </div>
       <div className={styles.right}>
         <button
