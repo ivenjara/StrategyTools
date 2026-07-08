@@ -28,7 +28,7 @@ export type OnError = (message: string) => void;
 
 const App: React.FC = () => {
   const styles = useStyles();
-  const [tab, setTab] = useState<TabKey>("arrange");
+  const [tab, setTab] = useState<TabKey>("library");
   const [theme, setTheme] = useState<ThemeName>(() =>
     localStorage.getItem("ns-theme") === "light" ? "light" : "dark"
   );

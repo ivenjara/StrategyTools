@@ -8,7 +8,7 @@ export type TabKey = "arrange" | "elements" | "library" | "finalize";
 const useStyles = makeStyles({
   root: {
     display: "flex",
-    gap: "2px",
+    gap: "10px",
     padding: "0 16px",
     borderBottom: `1px solid ${tokens.border}`,
   },
@@ -18,11 +18,12 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "7px",
+    gap: "5px",
     backgroundColor: "transparent",
     border: "none",
     cursor: "pointer",
-    fontSize: "13px",
+    fontSize: "12.5px",
+    whiteSpace: "nowrap",
     fontFamily: "inherit",
     marginBottom: "-1px",
     borderBottomWidth: "2px",
@@ -41,9 +42,9 @@ const useStyles = makeStyles({
 });
 
 const TABS: { key: TabKey; label: string; icon: React.FC }[] = [
+  { key: "library", label: "Library", icon: TabLibraryIcon },
   { key: "arrange", label: "Arrange", icon: TabArrangeIcon },
   { key: "elements", label: "Elements", icon: TabElementsIcon },
-  { key: "library", label: "Library", icon: TabLibraryIcon },
   { key: "finalize", label: "Finalize", icon: TabExportIcon },
 ];
 
