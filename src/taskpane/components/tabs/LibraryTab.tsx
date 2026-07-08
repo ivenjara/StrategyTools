@@ -177,6 +177,22 @@ const useStyles = makeStyles({
   deleteArmed: {
     color: tokens.danger,
   },
+  deleteConfirm: {
+    height: "26px",
+    padding: "0 8px",
+    fontSize: "11px",
+    fontWeight: 600,
+    backgroundColor: "transparent",
+    border: `1px solid ${tokens.danger}`,
+    borderRadius: tokens.radiusInput,
+    color: tokens.danger,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    flexShrink: 0,
+    ":hover": {
+      backgroundColor: tokens.hoverGhost,
+    },
+  },
   note: {
     fontSize: "12px",
     color: tokens.textMuted,
@@ -333,14 +349,21 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
     if (armedDeleteId !== id) {
       setArmedDeleteId(id);
       if (disarmTimer.current) clearTimeout(disarmTimer.current);
-      disarmTimer.current = setTimeout(() => setArmedDeleteId(null), 2500);
+      disarmTimer.current = setTimeout(() => setArmedDeleteId(null), 4000);
       return;
     }
     setArmedDeleteId(null);
     try {
       await deleteEntry(id);
-      setEntries((prev) => (prev ?? []).filter((e) => e.id !== id));
-      showLibStatus("Deleted ✓");
+      // Re-read from IndexedDB rather than trusting local state, so a
+      // silently failed delete is visible instead of resurfacing later.
+      const fresh = await listEntries();
+      setEntries(fresh);
+      if (fresh.some((e) => e.id === id)) {
+        onError("The entry couldn't be deleted from storage — try again.");
+      } else {
+        showLibStatus("Deleted ✓");
+      }
     } catch (err: unknown) {
       onError(err instanceof Error ? err.message : "Deleting entry failed");
     }
@@ -430,14 +453,25 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
           >
             {busyId === entry.id ? "…" : "Insert"}
           </button>
-          <button
-            type="button"
-            className={mergeClasses(styles.deleteButton, armedDeleteId === entry.id && styles.deleteArmed)}
-            title={armedDeleteId === entry.id ? "Click again to delete" : `Delete "${entry.name}"`}
-            onClick={() => handleDelete(entry.id)}
-          >
-            <TrashIcon />
-          </button>
+          {armedDeleteId === entry.id ? (
+            <button
+              type="button"
+              className={styles.deleteConfirm}
+              title="Click to permanently delete this entry"
+              onClick={() => handleDelete(entry.id)}
+            >
+              Delete?
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.deleteButton}
+              title={`Delete "${entry.name}"`}
+              onClick={() => handleDelete(entry.id)}
+            >
+              <TrashIcon />
+            </button>
+          )}
         </div>
         {expanded && (
           <div className={styles.previewStrip}>
