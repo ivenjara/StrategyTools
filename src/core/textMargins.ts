@@ -17,13 +17,16 @@ export interface MarginsCm {
  * - tables get the margins applied to every cell (PowerPointApi 1.9+).
  * Returns the number of shapes/tables updated.
  */
-export async function applyTextMargins(margins: MarginsCm): Promise<number> {
+export type MarginProgress = (fraction: number) => void;
+
+export async function applyTextMargins(margins: MarginsCm, onProgress?: MarginProgress): Promise<number> {
   const hasCellMargins = Office.context.requirements.isSetSupported("PowerPointApi", "1.9");
 
   return PowerPoint.run(async (context) => {
     const selected = context.presentation.getSelectedShapes();
     selected.load("items/id,items/type");
     await context.sync();
+    onProgress?.(0.1);
 
     if (selected.items.length < 1) {
       throw new Error("Select at least 1 shape or table.");
@@ -59,11 +62,14 @@ export async function applyTextMargins(margins: MarginsCm): Promise<number> {
         return table;
       });
       await context.sync();
+      onProgress?.(0.2);
 
       // Load and write cells in chunks — one giant batch across a large
       // table stalls PowerPoint web. Merged areas return null objects for
       // covered cells, hence the isNullObject guard.
       const CHUNK_SIZE = 25;
+      const totalCells = tables.reduce((sum, t) => sum + t.rowCount * t.columnCount, 0);
+      let processedCells = 0;
       for (const table of tables) {
         const coords: [number, number][] = [];
         for (let r = 0; r < table.rowCount; r++) {
@@ -87,11 +93,14 @@ export async function applyTextMargins(margins: MarginsCm): Promise<number> {
             cell.margins.bottom = bottomPt;
           }
           await context.sync();
+          processedCells += batch.length;
+          onProgress?.(0.2 + 0.75 * (processedCells / Math.max(1, totalCells)));
         }
       }
     }
 
     await context.sync();
+    onProgress?.(1);
     return textShapes.length + tableShapes.length;
   });
 }

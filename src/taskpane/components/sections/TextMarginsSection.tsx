@@ -5,6 +5,7 @@ import { tokens } from "../../theme/tokens";
 import SectionHeader from "../primitives/SectionHeader";
 import GridButton from "../primitives/GridButton";
 import EmphasizedButton from "../primitives/EmphasizedButton";
+import ProgressBar from "../primitives/ProgressBar";
 import { NumberField } from "../primitives/fields";
 import { LinkIcon } from "../primitives/icons";
 import { applyTextMargins, MarginsCm } from "../../../core/textMargins";
@@ -74,6 +75,8 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
   const [margins, setMargins] = useState<MarginsCm>(PRESETS[2].values);
   const [linked, setLinked] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const setMargin = (key: MarginKey, value: number) => {
     setMargins(linked ? { left: value, right: value, top: value, bottom: value } : { ...margins, [key]: value });
@@ -86,12 +89,16 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
   };
 
   const apply = async (values: MarginsCm = margins) => {
+    setIsApplying(true);
+    setProgress(0);
     try {
-      await applyTextMargins(values);
+      await applyTextMargins(values, setProgress);
       setApplied(true);
     } catch (err: unknown) {
       setApplied(false);
       onError(err instanceof Error ? err.message : "Applying margins failed");
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -157,6 +164,7 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
             title="Decrease all margins by 0.05 cm and apply"
             height={36}
             fontSize="16px"
+            disabled={isApplying}
             onClick={() => nudge(-0.05)}
             style={{ width: "36px", flexShrink: 0 }}
           >
@@ -166,6 +174,7 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
             title="Increase all margins by 0.05 cm and apply"
             height={36}
             fontSize="16px"
+            disabled={isApplying}
             onClick={() => nudge(0.05)}
             style={{ width: "36px", flexShrink: 0 }}
           >
@@ -175,12 +184,14 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
             <EmphasizedButton
               height={36}
               onClick={() => apply()}
+              disabled={isApplying}
               title="Applies to selected shapes and all cells of selected tables"
             >
-              Apply to selected shapes
+              {isApplying ? "Applying…" : "Apply to selected shapes"}
             </EmphasizedButton>
           </div>
         </div>
+        {isApplying && <ProgressBar fraction={progress} />}
       </div>
     </div>
   );
