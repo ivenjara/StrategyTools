@@ -54,12 +54,16 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
   const [target, setTarget] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [status, showStatus] = useTransientStatus(3500);
+
+  const onProgress = (done: number, total: number) => setProgress(`${done}/${total}`);
 
   const handleScan = async () => {
     setIsScanning(true);
+    setProgress(null);
     try {
-      const result = await scanFonts();
+      const result = await scanFonts(onProgress);
       setScan(result);
       if (result.fonts.length > 0 && !target.trim()) {
         setTarget(result.fonts[0].name);
@@ -68,13 +72,15 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
       onError(err instanceof Error ? err.message : "Font scan failed");
     } finally {
       setIsScanning(false);
+      setProgress(null);
     }
   };
 
   const handleApply = async () => {
     setIsApplying(true);
+    setProgress(null);
     try {
-      const updated = await applyFontEverywhere(target);
+      const updated = await applyFontEverywhere(target, onProgress);
       showStatus(`Updated ${updated} ✓`);
       setScan((prev) =>
         prev
@@ -85,6 +91,7 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
       onError(err instanceof Error ? err.message : "Applying font failed");
     } finally {
       setIsApplying(false);
+      setProgress(null);
     }
   };
 
@@ -104,7 +111,7 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
       />
       <div className={styles.column}>
         <EmphasizedButton height={34} onClick={handleScan} disabled={busy} title="List every font used on the slides">
-          {isScanning ? "Scanning…" : "Scan fonts across deck"}
+          {isScanning ? `Scanning… ${progress ?? ""}` : "Scan fonts across deck"}
         </EmphasizedButton>
         {scan && (
           <>
@@ -141,7 +148,7 @@ const FontConsistencySection: React.FC<{ onError: OnError }> = ({ onError }) => 
                   disabled={busy || !target.trim()}
                   title="Sets the font family everywhere; sizes, weights, and colors stay as they are"
                 >
-                  {isApplying ? "Applying…" : "Apply to all slides"}
+                  {isApplying ? `Applying… ${progress ?? ""}` : "Apply to all slides"}
                 </EmphasizedButton>
               </>
             )}

@@ -13,6 +13,29 @@ export interface FontScanResult {
 
 const CHUNK_SIZE = 25;
 
+/** Called after each processed chunk with (done, total) element counts. */
+export type FontProgress = (done: number, total: number) => void;
+
+const STALL_MESSAGE =
+  "PowerPoint stopped responding to the operation. Refresh the pane and try again — changes may be partially applied, and re-running is safe.";
+
+/**
+ * PowerPoint web occasionally never answers a sync, which would leave
+ * the UI spinning forever. Reject after a generous stall window instead;
+ * the underlying host operation may still finish in the background.
+ */
+async function withStallGuard<T>(work: Promise<T>, ms = 120000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const guard = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(STALL_MESSAGE)), ms);
+  });
+  try {
+    return await Promise.race([work, guard]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Walks every slide and returns font objects for all text-bearing
  * elements: text-capable shapes plus table cells (table cell fonts need
@@ -83,8 +106,8 @@ async function collectFontHolders(context: PowerPoint.RequestContext): Promise<P
 /**
  * Inventories the fonts used across the whole deck.
  */
-export async function scanFonts(): Promise<FontScanResult> {
-  return PowerPoint.run(async (context) => {
+export async function scanFonts(onProgress?: FontProgress): Promise<FontScanResult> {
+  return withStallGuard(PowerPoint.run(async (context) => {
     const holders = await collectFontHolders(context);
 
     for (let i = 0; i < holders.length; i += CHUNK_SIZE) {
@@ -92,6 +115,7 @@ export async function scanFonts(): Promise<FontScanResult> {
         font.load("name");
       }
       await context.sync();
+      onProgress?.(Math.min(i + CHUNK_SIZE, holders.length), holders.length);
     }
 
     const counts = new Map<string, number>();
@@ -109,7 +133,7 @@ export async function scanFonts(): Promise<FontScanResult> {
       elementsScanned: holders.length,
       mixedCount,
     };
-  });
+  }));
 }
 
 /**
@@ -117,13 +141,13 @@ export async function scanFonts(): Promise<FontScanResult> {
  * given font family. Sizes, weights, and colors are untouched. Elements
  * that mixed several fonts become uniform. Returns the element count.
  */
-export async function applyFontEverywhere(fontName: string): Promise<number> {
+export async function applyFontEverywhere(fontName: string, onProgress?: FontProgress): Promise<number> {
   const trimmed = fontName.trim();
   if (!trimmed) {
     throw new Error("Enter a font name first.");
   }
 
-  return PowerPoint.run(async (context) => {
+  return withStallGuard(PowerPoint.run(async (context) => {
     const holders = await collectFontHolders(context);
 
     for (let i = 0; i < holders.length; i += CHUNK_SIZE) {
@@ -131,8 +155,9 @@ export async function applyFontEverywhere(fontName: string): Promise<number> {
         font.name = trimmed;
       }
       await context.sync();
+      onProgress?.(Math.min(i + CHUNK_SIZE, holders.length), holders.length);
     }
 
     return holders.length;
-  });
+  }));
 }
