@@ -87,6 +87,22 @@ export const TabLibraryIcon = () =>
     { d: "M12.6 4.2 L15.4 3.5 L17.4 14.1 L14.6 14.8 Z", fill: "none", strokeLinejoin: "round" },
   ]);
 
+// Table tools (17px)
+export const TransposeIcon = () =>
+  strokeIcon(17, 18, [
+    { tag: "rect", x: 2, y: 2, width: 9, height: 9, rx: 1 },
+    { d: "M2 5 H11 M5 2 V11", fill: "none", strokeWidth: 1 },
+    { d: "M14 4 L16 6 L14 8", fill: "none" },
+    { d: "M16 6 L13 6", fill: "none" },
+    { d: "M4 14 L6 16 L8 14", fill: "none" },
+    { d: "M6 16 L6 13", fill: "none" },
+  ]);
+export const AlignToCellIcon = () =>
+  strokeIcon(17, 18, [
+    { tag: "rect", x: 2, y: 2, width: 14, height: 14, rx: 1 },
+    { tag: "rect", x: 6.5, y: 6.5, width: 5, height: 5, rx: 0.5, fill: "currentColor" },
+  ]);
+
 // Library entry actions
 export const TrashIcon = () =>
   strokeIcon(13, 18, [
