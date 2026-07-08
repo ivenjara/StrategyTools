@@ -10,6 +10,11 @@ export interface LibraryEntry {
   slideCount: number;
   /** epoch ms */
   savedAt: number;
+  /**
+   * PNG previews (base64, no data: prefix), one per slide in order.
+   * Captured at save time — entries saved before this feature have none.
+   */
+  thumbnails?: string[];
 }
 
 export type InsertFormatting = "KeepSourceFormatting" | "UseDestinationTheme";
@@ -87,6 +92,35 @@ async function withStore<T>(
   });
 }
 
+const THUMBNAIL_WIDTH = 320;
+
+/**
+ * Renders PNG previews of the given slides (one sync per slide — large
+ * batches are unreliable on PowerPoint web). Best-effort: failures and
+ * unsupported hosts yield an empty array, never an error.
+ */
+async function captureSlideThumbnails(slideIds: string[]): Promise<string[]> {
+  if (!Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) {
+    return [];
+  }
+  const thumbnails: string[] = [];
+  try {
+    await PowerPoint.run(async (context) => {
+      for (const id of slideIds) {
+        const slide = context.presentation.slides.getItem(id);
+        const result = slide.getImageAsBase64({ width: THUMBNAIL_WIDTH });
+        await context.sync();
+        if (result.value) {
+          thumbnails.push(result.value);
+        }
+      }
+    });
+  } catch {
+    return [];
+  }
+  return thumbnails;
+}
+
 /**
  * Saves the currently selected slides as a named library entry.
  */
@@ -98,6 +132,7 @@ export async function saveSelectedSlidesToLibrary(name: string): Promise<Library
 
   const info = await getSelectedSlideInfo();
   const base64 = await getSelectedSlidesBase64(info.slideIds);
+  const thumbnails = await captureSlideThumbnails(info.slideIds);
 
   const entry: LibraryEntry = {
     id: genId(),
@@ -105,6 +140,7 @@ export async function saveSelectedSlidesToLibrary(name: string): Promise<Library
     base64,
     slideCount: info.slideIds.length,
     savedAt: Date.now(),
+    ...(thumbnails.length > 0 ? { thumbnails } : {}),
   };
   await withStore("readwrite", (store) => store.put(entry));
   return entry;
@@ -202,12 +238,15 @@ export async function importLibrary(file: File): Promise<number> {
   const candidates: LibraryEntry[] = [];
   for (const raw of data.entries as Partial<LibraryEntry>[]) {
     if (typeof raw?.name !== "string" || typeof raw?.base64 !== "string" || raw.base64.length === 0) continue;
+    const thumbnails =
+      Array.isArray(raw.thumbnails) && raw.thumbnails.every((t) => typeof t === "string") ? raw.thumbnails : undefined;
     candidates.push({
       id: typeof raw.id === "string" && raw.id ? raw.id : genId(),
       name: raw.name,
       base64: raw.base64,
       slideCount: typeof raw.slideCount === "number" && raw.slideCount > 0 ? raw.slideCount : 1,
       savedAt: typeof raw.savedAt === "number" ? raw.savedAt : Date.now(),
+      ...(thumbnails && thumbnails.length > 0 ? { thumbnails } : {}),
     });
   }
   if (candidates.length === 0) {

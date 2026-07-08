@@ -47,16 +47,41 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.border}`,
     borderRadius: tokens.radiusButton,
     padding: "8px 10px",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
     ":hover": {
       backgroundColor: tokens.cardHover,
     },
   },
+  rowHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
   rowText: {
     flex: 1,
     minWidth: 0,
+    cursor: "pointer",
+  },
+  thumb: {
+    width: "56px",
+    height: "32px",
+    objectFit: "cover",
+    borderRadius: "4px",
+    border: `1px solid ${tokens.borderControl}`,
+    flexShrink: 0,
+    cursor: "pointer",
+    backgroundColor: tokens.inputBg,
+  },
+  previewStrip: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+    marginTop: "8px",
+  },
+  previewImage: {
+    width: "100%",
+    borderRadius: "4px",
+    border: `1px solid ${tokens.borderControl}`,
+    display: "block",
   },
   rowName: {
     fontSize: "13px",
@@ -153,6 +178,7 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [armedDeleteId, setArmedDeleteId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [saveStatus, showSaveStatus] = useTransientStatus();
   const [libStatus, showLibStatus] = useTransientStatus();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -275,35 +301,66 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
           <div className={styles.note}>No saved slides yet. Select slides in the panel and save them above.</div>
         ) : (
           <div className={styles.list}>
-            {(entries ?? []).map((entry) => (
-              <div key={entry.id} className={styles.row}>
-                <div className={styles.rowText}>
-                  <div className={styles.rowName} title={entry.name}>
-                    {entry.name}
+            {(entries ?? []).map((entry) => {
+              const hasThumbs = !!entry.thumbnails?.length;
+              const expanded = expandedId === entry.id;
+              const togglePreview = () => hasThumbs && setExpandedId(expanded ? null : entry.id);
+              const previewTitle = hasThumbs
+                ? expanded
+                  ? "Hide preview"
+                  : "Click to preview"
+                : "No preview available (re-save the slides to capture one)";
+              return (
+                <div key={entry.id} className={styles.row}>
+                  <div className={styles.rowHeader}>
+                    {hasThumbs && (
+                      <img
+                        className={styles.thumb}
+                        src={`data:image/png;base64,${entry.thumbnails![0]}`}
+                        alt=""
+                        title={previewTitle}
+                        onClick={togglePreview}
+                      />
+                    )}
+                    <div className={styles.rowText} title={previewTitle} onClick={togglePreview}>
+                      <div className={styles.rowName}>{entry.name}</div>
+                      <div className={styles.rowMeta}>
+                        {entry.slideCount} slide{entry.slideCount === 1 ? "" : "s"} · {formatSavedDate(entry.savedAt)}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.insertButton}
+                      disabled={busyId !== null}
+                      title={`Insert after current slide (${formatting === "KeepSourceFormatting" ? "keep design" : "match deck"})`}
+                      onClick={() => handleInsert(entry)}
+                    >
+                      {busyId === entry.id ? "…" : "Insert"}
+                    </button>
+                    <button
+                      type="button"
+                      className={mergeClasses(styles.deleteButton, armedDeleteId === entry.id && styles.deleteArmed)}
+                      title={armedDeleteId === entry.id ? "Click again to delete" : `Delete "${entry.name}"`}
+                      onClick={() => handleDelete(entry.id)}
+                    >
+                      <TrashIcon />
+                    </button>
                   </div>
-                  <div className={styles.rowMeta}>
-                    {entry.slideCount} slide{entry.slideCount === 1 ? "" : "s"} · {formatSavedDate(entry.savedAt)}
-                  </div>
+                  {expanded && hasThumbs && (
+                    <div className={styles.previewStrip}>
+                      {entry.thumbnails!.map((thumb, i) => (
+                        <img
+                          key={i}
+                          className={styles.previewImage}
+                          src={`data:image/png;base64,${thumb}`}
+                          alt={`Slide ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  className={styles.insertButton}
-                  disabled={busyId !== null}
-                  title={`Insert after current slide (${formatting === "KeepSourceFormatting" ? "keep design" : "match deck"})`}
-                  onClick={() => handleInsert(entry)}
-                >
-                  {busyId === entry.id ? "…" : "Insert"}
-                </button>
-                <button
-                  type="button"
-                  className={mergeClasses(styles.deleteButton, armedDeleteId === entry.id && styles.deleteArmed)}
-                  title={armedDeleteId === entry.id ? "Click again to delete" : `Delete "${entry.name}"`}
-                  onClick={() => handleDelete(entry.id)}
-                >
-                  <TrashIcon />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
