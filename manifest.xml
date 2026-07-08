@@ -9,8 +9,8 @@
   <Version>1.0.0.0</Version>
   <ProviderName>Nightshift</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Nightshift"/>
-  <Description DefaultValue="Slide layout tools that work the night shift so you don't have to"/>
+  <DisplayName DefaultValue="Shift"/>
+  <Description DefaultValue="Slide layout tools that work around the clock — day shift or night shift"/>
   <IconUrl DefaultValue="https://nightshift-gamma.vercel.app/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://nightshift-gamma.vercel.app/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://nightshift-gamma.vercel.app"/>
@@ -80,13 +80,13 @@
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://nightshift-gamma.vercel.app"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="NightshiftGroup.Label" DefaultValue="Nightshift"/>
-        <bt:String id="ShowTaskPane.Label" DefaultValue="Nightshift"/>
-        <bt:String id="GetStarted.Title" DefaultValue="Nightshift"/>
+        <bt:String id="NightshiftGroup.Label" DefaultValue="Shift"/>
+        <bt:String id="ShowTaskPane.Label" DefaultValue="Shift"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Shift"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="ShowTaskPane.Tooltip" DefaultValue="Open the Nightshift panel"/>
-        <bt:String id="GetStarted.Description" DefaultValue="Click the Nightshift button on the Home tab to get started."/>
+        <bt:String id="ShowTaskPane.Tooltip" DefaultValue="Open the Shift panel"/>
+        <bt:String id="GetStarted.Description" DefaultValue="Click the Shift button on the Home tab to get started."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
