@@ -6,6 +6,7 @@ import SectionHeader from "../primitives/SectionHeader";
 import PrimaryButton from "../primitives/PrimaryButton";
 import SegmentedControl from "../primitives/SegmentedControl";
 import StatusStampsSection from "../sections/StatusStampsSection";
+import FontConsistencySection from "../sections/FontConsistencySection";
 import { TextField, Checkbox } from "../primitives/fields";
 import { DownloadIcon, EnvelopeIcon } from "../primitives/icons";
 import {
@@ -129,6 +130,7 @@ const FinalizeTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   return (
     <div className={styles.root}>
       <StatusStampsSection onError={onError} />
+      <FontConsistencySection onError={onError} />
       <div>
         <SectionHeader label="Export" />
         <div className={styles.exportControls}>
