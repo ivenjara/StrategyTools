@@ -23,6 +23,16 @@ import { useTransientStatus } from "../useTransientStatus";
 import { OnError } from "../App";
 
 const CATEGORY_DATALIST_ID = "ns-category-options";
+const COLLAPSED_STORAGE_KEY = "ns-lib-collapsed";
+
+function loadCollapsed(): Set<string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(COLLAPSED_STORAGE_KEY) ?? "[]");
+    return new Set(Array.isArray(raw) ? raw.filter((v) => typeof v === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
 
 const useStyles = makeStyles({
   root: {
@@ -50,12 +60,39 @@ const useStyles = makeStyles({
     overflowY: "auto",
   },
   groupHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    width: "100%",
+    backgroundColor: "transparent",
+    border: "none",
+    padding: "2px 0",
+    marginTop: "6px",
+    cursor: "pointer",
     fontSize: "10.5px",
     fontWeight: 600,
     letterSpacing: "1px",
     textTransform: "uppercase",
     color: tokens.textFaint,
-    marginTop: "6px",
+    fontFamily: "inherit",
+    textAlign: "left",
+    ":hover": {
+      color: tokens.textMuted,
+    },
+  },
+  groupChevron: {
+    display: "grid",
+    placeItems: "center",
+    width: "10px",
+    flexShrink: 0,
+    transitionProperty: "transform",
+    transitionDuration: "120ms",
+  },
+  groupCount: {
+    marginLeft: "auto",
+    fontWeight: 400,
+    letterSpacing: "0.2px",
+    textTransform: "none",
   },
   row: {
     backgroundColor: tokens.card,
@@ -255,6 +292,24 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [armedDeleteId, setArmedDeleteId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed);
+
+  const toggleGroup = (label: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+      }
+      try {
+        localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify([...next]));
+      } catch {
+        // persistence is best-effort
+      }
+      return next;
+    });
+  };
   const [saveStatus, showSaveStatus] = useTransientStatus();
   const [libStatus, showLibStatus] = useTransientStatus();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -564,12 +619,34 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
             <div className={styles.note}>No matches.</div>
           ) : (
             <div className={styles.list}>
-              {groups.map((group) => (
-                <React.Fragment key={group.label ?? "__all"}>
-                  {group.label !== null && <div className={styles.groupHeader}>{group.label}</div>}
-                  {group.items.map(renderRow)}
-                </React.Fragment>
-              ))}
+              {groups.map((group) => {
+                // While searching, show all matches regardless of collapse state.
+                const isCollapsed = group.label !== null && !searching && collapsed.has(group.label);
+                return (
+                  <React.Fragment key={group.label ?? "__all"}>
+                    {group.label !== null && (
+                      <button
+                        type="button"
+                        className={styles.groupHeader}
+                        title={isCollapsed ? "Expand category" : "Collapse category"}
+                        onClick={() => toggleGroup(group.label!)}
+                      >
+                        <span
+                          className={styles.groupChevron}
+                          style={{ transform: isCollapsed ? "rotate(0deg)" : "rotate(90deg)" }}
+                        >
+                          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                            <path d="M2 1 L6 4 L2 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                        <span>{group.label}</span>
+                        <span className={styles.groupCount}>{group.items.length}</span>
+                      </button>
+                    )}
+                    {!isCollapsed && group.items.map(renderRow)}
+                  </React.Fragment>
+                );
+              })}
             </div>
           )}
         </div>
