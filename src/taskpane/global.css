@@ -1,14 +1,78 @@
+/* Dark theme — "Nightshift" (design handoff v4) */
+:root {
+  --ns-pane-bg: #14171f;
+  --ns-desk-bg: #0b0d14;
+  --ns-card: #1f2432;
+  --ns-card-hover: #242a3c;
+  --ns-card-active: #2a3150;
+  --ns-emph-bg: #232a3f;
+  --ns-emph-border: #39415c;
+  --ns-emph-hover: #283050;
+  --ns-input-bg: #1a1e2a;
+  --ns-hover-ghost: #222736;
+  --ns-border: #262b38;
+  --ns-border-control: #2c3244;
+  --ns-accent: #9ba3ff;
+  --ns-accent-hover: #b0b7ff;
+  --ns-text-strong: #ffffff;
+  --ns-text-primary: #e7eaf3;
+  --ns-text-secondary: #c9cede;
+  --ns-text-muted: #8b92a8;
+  --ns-text-faint: #7e859c;
+  --ns-text-disabled: #565d74;
+  --ns-placeholder: #5a6078;
+  --ns-success: #7bd8a0;
+  --ns-warn: #f5b454;
+  --ns-danger: #f08a8a;
+  --ns-seg-track: #1a1e2a;
+  --ns-seg-active: #2c3244;
+}
+
+/* Light theme — "Dayshift" (design handoff v2, Office-native) */
+body[data-theme="light"] {
+  --ns-pane-bg: #ffffff;
+  --ns-desk-bg: #f5f5f5;
+  --ns-card: #ffffff;
+  --ns-card-hover: #f5f8fc;
+  --ns-card-active: #ebf3fb;
+  --ns-emph-bg: #ebf3fb;
+  --ns-emph-border: #9dc1e0;
+  --ns-emph-hover: #deebf7;
+  --ns-input-bg: #ffffff;
+  --ns-hover-ghost: #efefef;
+  --ns-border: #e5e5e5;
+  --ns-border-control: #d1d1d1;
+  --ns-accent: #0f6cbd;
+  --ns-accent-hover: #0c5aa0;
+  --ns-text-strong: #1a1a1a;
+  --ns-text-primary: #242424;
+  --ns-text-secondary: #333333;
+  --ns-text-muted: #616161;
+  --ns-text-faint: #707070;
+  --ns-text-disabled: #a6a6a6;
+  --ns-placeholder: #8a8a8a;
+  --ns-success: #107c41;
+  --ns-warn: #9d5d00;
+  --ns-danger: #c0392b;
+  --ns-seg-track: #f0f1f3;
+  --ns-seg-active: #ffffff;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #14171f;
+  background: var(--ns-pane-bg);
   color-scheme: dark;
+}
+
+body[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
   font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  color: #e7eaf3;
+  color: var(--ns-text-primary);
 }
 
 * {
@@ -16,7 +80,7 @@ body {
 }
 
 input::placeholder {
-  color: #5a6078;
+  color: var(--ns-placeholder);
 }
 
 button {

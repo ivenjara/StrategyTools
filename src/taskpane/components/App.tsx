@@ -1,7 +1,7 @@
 import * as React from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { makeStyles } from "@griffel/react";
-import { tokens } from "../theme/tokens";
+import { tokens, ThemeName } from "../theme/tokens";
 import TitleBar from "./TitleBar";
 import TabBar, { TabKey } from "./TabBar";
 import ErrorBar from "./ErrorBar";
@@ -28,8 +28,16 @@ export type OnError = (message: string) => void;
 const App: React.FC = () => {
   const styles = useStyles();
   const [tab, setTab] = useState<TabKey>("arrange");
+  const [theme, setTheme] = useState<ThemeName>(() =>
+    localStorage.getItem("ns-theme") === "light" ? "light" : "dark"
+  );
   const [error, setError] = useState<string | null>(null);
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    document.body.dataset.theme = theme;
+    localStorage.setItem("ns-theme", theme);
+  }, [theme]);
 
   const onError = useCallback<OnError>((message) => {
     // eslint-disable-next-line no-console
@@ -50,7 +58,7 @@ const App: React.FC = () => {
 
   return (
     <div className={styles.root}>
-      <TitleBar />
+      <TitleBar theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
       <TabBar active={tab} onChange={setTab} />
       <div style={tabStyle("arrange")}>
         <ArrangeTab onError={onError} />

@@ -46,7 +46,7 @@ function SegmentedControl<T extends string>({
             style={{
               fontSize,
               backgroundColor: active ? tokens.segActive : "transparent",
-              color: active ? "#FFFFFF" : tokens.textMuted,
+              color: active ? tokens.textStrong : tokens.textMuted,
               fontWeight: active ? 600 : 400,
             }}
             onClick={() => onChange(opt.value)}

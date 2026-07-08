@@ -1,48 +1,54 @@
 /**
- * Design tokens for the NightShift dark theme.
- * Source of truth: design_handoff_nightshift_pane/README.md (v4 tabbed design).
+ * Design tokens for the NightShift pane, resolved through CSS custom
+ * properties so the theme can switch at runtime (dark "Nightshift" /
+ * light "Dayshift"). The actual palettes live in global.css — dark on
+ * :root, light under body[data-theme="light"].
+ * Source of truth: design_handoff_nightshift_pane/README.md (v4 dark, v2 light).
  */
 export const tokens = {
   // Surfaces
-  paneBg: "#14171F",
-  deskBg: "#0B0D14",
-  card: "#1F2432",
-  cardHover: "#242A3C",
-  cardActive: "#2A3150",
-  emphBg: "#232A3F",
-  emphBorder: "#39415C",
-  emphHover: "#283050",
-  inputBg: "#1A1E2A",
-  hoverGhost: "#222736",
+  paneBg: "var(--ns-pane-bg)",
+  deskBg: "var(--ns-desk-bg)",
+  card: "var(--ns-card)",
+  cardHover: "var(--ns-card-hover)",
+  cardActive: "var(--ns-card-active)",
+  emphBg: "var(--ns-emph-bg)",
+  emphBorder: "var(--ns-emph-border)",
+  emphHover: "var(--ns-emph-hover)",
+  inputBg: "var(--ns-input-bg)",
+  hoverGhost: "var(--ns-hover-ghost)",
 
   // Borders
-  border: "#262B38",
-  borderControl: "#2C3244",
+  border: "var(--ns-border)",
+  borderControl: "var(--ns-border-control)",
 
   // Accent
-  accent: "#9BA3FF",
-  accentHover: "#B0B7FF",
+  accent: "var(--ns-accent)",
+  accentHover: "var(--ns-accent-hover)",
 
   // Text
-  textPrimary: "#E7EAF3",
-  textSecondary: "#C9CEDE",
-  textMuted: "#8B92A8",
-  textFaint: "#7E859C",
-  textDisabled: "#565D74",
-  placeholder: "#5A6078",
+  textStrong: "var(--ns-text-strong)",
+  textPrimary: "var(--ns-text-primary)",
+  textSecondary: "var(--ns-text-secondary)",
+  textMuted: "var(--ns-text-muted)",
+  textFaint: "var(--ns-text-faint)",
+  textDisabled: "var(--ns-text-disabled)",
+  placeholder: "var(--ns-placeholder)",
 
   // Semantic
-  success: "#7BD8A0",
-  warn: "#F5B454",
-  danger: "#F08A8A",
+  success: "var(--ns-success)",
+  warn: "var(--ns-warn)",
+  danger: "var(--ns-danger)",
 
   // Segmented control
-  segTrack: "#1A1E2A",
-  segActive: "#2C3244",
+  segTrack: "var(--ns-seg-track)",
+  segActive: "var(--ns-seg-active)",
 
-  // Shape & type
+  // Shape & type (theme-independent)
   fontFamily: '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif',
   radiusButton: "7px",
   radiusInput: "6px",
   radiusSegment: "5px",
 } as const;
+
+export type ThemeName = "dark" | "light";

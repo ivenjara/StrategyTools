@@ -127,7 +127,7 @@ const TextMarginsSection: React.FC<{ onError: OnError }> = ({ onError }) => {
                 fontSize="12px"
                 selected={active}
                 onClick={() => applyPreset(values)}
-                style={{ color: active ? "#FFFFFF" : tokens.textMuted }}
+                style={{ color: active ? tokens.textStrong : tokens.textMuted }}
               >
                 {name}
               </GridButton>

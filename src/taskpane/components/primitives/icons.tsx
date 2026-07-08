@@ -81,10 +81,21 @@ export const TabElementsIcon = () =>
 export const TabExportIcon = () =>
   strokeIcon(15, 18, [{ d: "M9 2 V10 M9 10 L6 7 M9 10 L12 7", fill: "none" }, { d: "M3 13 H15", fill: "none" }]);
 
-// Title bar
-export const MoonLogoIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-    <path d="M12 8.5A5.5 5.5 0 1 1 5.5 2 4.3 4.3 0 0 0 12 8.5Z" fill={tokens.accent} />
+// Title bar — glyphs render in currentColor so the theme can drive them
+export const MoonGlyph = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+    <path d="M12 8.5A5.5 5.5 0 1 1 5.5 2 4.3 4.3 0 0 0 12 8.5Z" fill="currentColor" />
+  </svg>
+);
+export const SunGlyph = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+    <circle cx="7" cy="7" r="3" fill="currentColor" />
+    <path
+      d="M7 0.8V2.4M7 11.6V13.2M0.8 7H2.4M11.6 7H13.2M2.8 2.8L3.9 3.9M10.1 10.1L11.2 11.2M11.2 2.8L10.1 3.9M3.9 10.1L2.8 11.2"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
   </svg>
 );
 export const CloseIcon = () => (
@@ -109,7 +120,7 @@ export const LinkIcon = () => (
 export const CopyIcon = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
     <rect x="1" y="1" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-    <rect x="4" y="4" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill={tokens.emphBg} />
+    <rect x="4" y="4" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" style={{ fill: tokens.emphBg }} />
   </svg>
 );
 
@@ -144,16 +155,17 @@ export const EnvelopeIcon = () => (
 
 // Harvey balls: fill = 0..4 quarters
 export function HarveyBallIcon({ fill, selected }: { fill: 0 | 1 | 2 | 3 | 4; selected: boolean }): JSX.Element {
-  const c = selected ? tokens.accent : tokens.textSecondary;
   const wedge = {
     1: "M11 11 L11 2 A9 9 0 0 1 20 11 Z",
     2: "M11 2 A9 9 0 0 1 11 20 Z",
     3: "M11 11 L11 2 A9 9 0 1 1 2 11 Z",
   }[fill as 1 | 2 | 3];
+  // CSS variables don't resolve in SVG attributes, so drive both stroke
+  // and fill through currentColor.
   return (
-    <svg width="22" height="22" viewBox="0 0 22 22">
-      <circle cx="11" cy="11" r="9" stroke={c} strokeWidth="1.4" fill={fill === 4 ? c : "none"} />
-      {fill > 0 && fill < 4 && <path d={wedge} fill={c} />}
+    <svg width="22" height="22" viewBox="0 0 22 22" style={{ color: selected ? tokens.accent : tokens.textSecondary }}>
+      <circle cx="11" cy="11" r="9" stroke="currentColor" strokeWidth="1.4" fill={fill === 4 ? "currentColor" : "none"} />
+      {fill > 0 && fill < 4 && <path d={wedge} fill="currentColor" />}
     </svg>
   );
 }

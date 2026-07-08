@@ -29,7 +29,7 @@ const useStyles = makeStyles({
     borderBottomStyle: "solid",
     padding: 0,
     ":hover": {
-      color: "#FFFFFF",
+      color: tokens.textStrong,
     },
   },
   icon: {
@@ -59,7 +59,7 @@ const TabBar: React.FC<{ active: TabKey; onChange: (tab: TabKey) => void }> = ({
             className={styles.tab}
             style={{
               borderBottomColor: isActive ? tokens.accent : "transparent",
-              color: isActive ? "#FFFFFF" : tokens.textMuted,
+              color: isActive ? tokens.textStrong : tokens.textMuted,
               fontWeight: isActive ? 600 : 400,
             }}
             onClick={() => onChange(key)}

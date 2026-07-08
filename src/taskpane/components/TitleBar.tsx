@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { makeStyles } from "@griffel/react";
-import { tokens } from "../theme/tokens";
-import { MoonLogoIcon, CloseIcon } from "./primitives/icons";
+import { tokens, ThemeName } from "../theme/tokens";
+import { MoonGlyph, SunGlyph, CloseIcon } from "./primitives/icons";
 
 const useStyles = makeStyles({
   root: {
@@ -24,6 +24,7 @@ const useStyles = makeStyles({
     height: "24px",
     borderRadius: "6px",
     backgroundColor: tokens.emphBg,
+    color: tokens.accent,
   },
   title: {
     fontSize: "15px",
@@ -40,7 +41,12 @@ const useStyles = makeStyles({
     padding: "2px 6px",
     borderRadius: "3px",
   },
-  close: {
+  right: {
+    display: "flex",
+    alignItems: "center",
+    gap: "2px",
+  },
+  ghostButton: {
     width: "28px",
     height: "28px",
     display: "grid",
@@ -58,25 +64,39 @@ const useStyles = makeStyles({
   },
 });
 
-const TitleBar: React.FC = () => {
+interface TitleBarProps {
+  theme: ThemeName;
+  onToggleTheme: () => void;
+}
+
+const TitleBar: React.FC<TitleBarProps> = ({ theme, onToggleTheme }) => {
   const styles = useStyles();
+  const isDark = theme === "dark";
   // Office.addin.hide() is only available with a shared runtime; hide the button otherwise.
   const canClose = typeof Office !== "undefined" && !!Office.addin && typeof Office.addin.hide === "function";
 
   return (
     <div className={styles.root}>
       <div className={styles.left}>
-        <span className={styles.logoTile}>
-          <MoonLogoIcon />
-        </span>
-        <span className={styles.title}>Nightshift</span>
+        <span className={styles.logoTile}>{isDark ? <MoonGlyph /> : <SunGlyph />}</span>
+        <span className={styles.title}>{isDark ? "Nightshift" : "Dayshift"}</span>
         <span className={styles.badge}>MVP</span>
       </div>
-      {canClose && (
-        <button type="button" title="Close pane" className={styles.close} onClick={() => Office.addin.hide()}>
-          <CloseIcon />
+      <div className={styles.right}>
+        <button
+          type="button"
+          title={isDark ? "Switch to Dayshift (light mode)" : "Switch to Nightshift (dark mode)"}
+          className={styles.ghostButton}
+          onClick={onToggleTheme}
+        >
+          {isDark ? <SunGlyph size={14} /> : <MoonGlyph size={14} />}
         </button>
-      )}
+        {canClose && (
+          <button type="button" title="Close pane" className={styles.ghostButton} onClick={() => Office.addin.hide()}>
+            <CloseIcon />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

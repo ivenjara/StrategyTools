@@ -16,7 +16,7 @@ const useStyles = makeStyles({
     fontFamily: "inherit",
     ":hover": {
       ...shorthands.borderColor(tokens.accent),
-      color: "#FFFFFF",
+      color: tokens.textStrong,
       backgroundColor: tokens.cardHover,
     },
     ":active": {
