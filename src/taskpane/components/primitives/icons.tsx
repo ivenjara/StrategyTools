@@ -80,6 +80,24 @@ export const TabElementsIcon = () =>
   strokeIcon(15, 18, [{ tag: "circle", cx: 9, cy: 9, r: 7 }, { d: "M9 2 A7 7 0 0 1 9 16 Z", fill: "currentColor" }]);
 export const TabExportIcon = () =>
   strokeIcon(15, 18, [{ d: "M9 2 V10 M9 10 L6 7 M9 10 L12 7", fill: "none" }, { d: "M3 13 H15", fill: "none" }]);
+export const TabLibraryIcon = () =>
+  strokeIcon(15, 18, [
+    rect(2.5, 3, 3.5, 12),
+    rect(7.5, 3, 3.5, 12),
+    { d: "M12.6 4.2 L15.4 3.5 L17.4 14.1 L14.6 14.8 Z", fill: "none", strokeLinejoin: "round" },
+  ]);
+
+// Library entry actions
+export const TrashIcon = () =>
+  strokeIcon(13, 18, [
+    { d: "M3 5 H15 M7 5 V3.2 H11 V5 M4.5 5 L5.3 15.5 H12.7 L13.5 5 M7.5 8.2 V12.5 M10.5 8.2 V12.5", fill: "none" },
+  ]);
+export const UploadIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M7 9V1M7 1L4 4M7 1L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2 11H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
 
 // Title bar — glyphs render in currentColor so the theme can drive them
 export const MoonGlyph = ({ size = 13 }: { size?: number }) => (

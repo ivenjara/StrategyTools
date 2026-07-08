@@ -1,9 +1,9 @@
 import * as React from "react";
 import { makeStyles } from "@griffel/react";
 import { tokens } from "../theme/tokens";
-import { TabArrangeIcon, TabElementsIcon, TabExportIcon } from "./primitives/icons";
+import { TabArrangeIcon, TabElementsIcon, TabExportIcon, TabLibraryIcon } from "./primitives/icons";
 
-export type TabKey = "arrange" | "elements" | "finalize";
+export type TabKey = "arrange" | "elements" | "library" | "finalize";
 
 const useStyles = makeStyles({
   root: {
@@ -43,6 +43,7 @@ const useStyles = makeStyles({
 const TABS: { key: TabKey; label: string; icon: React.FC }[] = [
   { key: "arrange", label: "Arrange", icon: TabArrangeIcon },
   { key: "elements", label: "Elements", icon: TabElementsIcon },
+  { key: "library", label: "Library", icon: TabLibraryIcon },
   { key: "finalize", label: "Finalize", icon: TabExportIcon },
 ];
 

@@ -177,10 +177,10 @@ export function getFullPresentation(): Promise<Blob> {
 }
 
 /**
- * Export only the selected slides as a new .pptx Blob.
+ * Export only the selected slides as a base64-encoded .pptx string.
  * Uses SlideCollection.exportAsBase64Presentation (PowerPointApi 1.10).
  */
-export async function getSelectedSlidesPresentation(slideIds: string[]): Promise<Blob> {
+export async function getSelectedSlidesBase64(slideIds: string[]): Promise<string> {
   const hasExportApi = Office.context.requirements.isSetSupported("PowerPointApi", "1.10");
 
   if (!hasExportApi) {
@@ -201,7 +201,15 @@ export async function getSelectedSlidesPresentation(slideIds: string[]): Promise
     throw new Error("Failed to export selected slides.");
   }
 
-  // Convert base64 to Blob
+  return base64;
+}
+
+/**
+ * Export only the selected slides as a new .pptx Blob.
+ */
+export async function getSelectedSlidesPresentation(slideIds: string[]): Promise<Blob> {
+  const base64 = await getSelectedSlidesBase64(slideIds);
+
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
