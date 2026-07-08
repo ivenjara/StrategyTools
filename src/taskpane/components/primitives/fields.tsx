@@ -98,18 +98,30 @@ export const NumberField: React.FC<{
 };
 
 export const TextField: React.FC<{
-  label: string;
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   id?: string;
-}> = ({ label, value, onChange, id }) => {
+  placeholder?: string;
+  /** id of a <datalist> for suggestions */
+  list?: string;
+}> = ({ label, value, onChange, id, placeholder, list }) => {
   const styles = useStyles();
   return (
     <div className={styles.textWrap}>
-      <label className={styles.textLabel} htmlFor={id}>
-        {label}
-      </label>
-      <input id={id} value={value} onChange={(e) => onChange(e.target.value)} className={styles.textInput} />
+      {label !== undefined && (
+        <label className={styles.textLabel} htmlFor={id}>
+          {label}
+        </label>
+      )}
+      <input
+        id={id}
+        value={value}
+        placeholder={placeholder}
+        list={list}
+        onChange={(e) => onChange(e.target.value)}
+        className={styles.textInput}
+      />
     </div>
   );
 };

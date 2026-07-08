@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { makeStyles, mergeClasses, shorthands } from "@griffel/react";
 import { tokens } from "../../theme/tokens";
 import SectionHeader from "../primitives/SectionHeader";
@@ -15,11 +15,14 @@ import {
   listEntries,
   deleteEntry,
   insertEntry,
+  updateEntryCategory,
   exportLibrary,
   importLibrary,
 } from "../../../core/slideLibrary";
 import { useTransientStatus } from "../useTransientStatus";
 import { OnError } from "../App";
+
+const CATEGORY_DATALIST_ID = "ns-category-options";
 
 const useStyles = makeStyles({
   root: {
@@ -34,13 +37,25 @@ const useStyles = makeStyles({
     flexDirection: "column",
     gap: "10px",
   },
+  libraryColumn: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
   list: {
     display: "flex",
     flexDirection: "column",
     gap: "6px",
     maxHeight: "320px",
     overflowY: "auto",
-    marginTop: "8px",
+  },
+  groupHeader: {
+    fontSize: "10.5px",
+    fontWeight: 600,
+    letterSpacing: "1px",
+    textTransform: "uppercase",
+    color: tokens.textFaint,
+    marginTop: "6px",
   },
   row: {
     backgroundColor: tokens.card,
@@ -60,6 +75,19 @@ const useStyles = makeStyles({
     flex: 1,
     minWidth: 0,
     cursor: "pointer",
+  },
+  rowName: {
+    fontSize: "13px",
+    fontWeight: 600,
+    color: tokens.textPrimary,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  rowMeta: {
+    fontSize: "11px",
+    color: tokens.textMuted,
+    marginTop: "2px",
   },
   thumb: {
     width: "56px",
@@ -83,18 +111,30 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.borderControl}`,
     display: "block",
   },
-  rowName: {
-    fontSize: "13px",
-    fontWeight: 600,
-    color: tokens.textPrimary,
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+  categoryRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
   },
-  rowMeta: {
-    fontSize: "11px",
+  categoryLabel: {
+    fontSize: "12px",
     color: tokens.textMuted,
-    marginTop: "2px",
+    whiteSpace: "nowrap",
+  },
+  categoryInput: {
+    flex: 1,
+    height: "30px",
+    padding: "0 8px",
+    border: `1px solid ${tokens.borderControl}`,
+    borderRadius: tokens.radiusInput,
+    fontSize: "12.5px",
+    color: tokens.textPrimary,
+    backgroundColor: tokens.inputBg,
+    outlineStyle: "none",
+    fontFamily: "inherit",
+    ":focus": {
+      ...shorthands.borderColor(tokens.accent),
+    },
   },
   insertButton: {
     height: "26px",
@@ -174,6 +214,8 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
   const [storageError, setStorageError] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [query, setQuery] = useState("");
   const [formatting, setFormatting] = useState<InsertFormatting>("KeepSourceFormatting");
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -193,12 +235,42 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
       });
   }, []);
 
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    for (const entry of entries ?? []) {
+      if (entry.category) set.add(entry.category);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [entries]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const all = entries ?? [];
+    if (!q) return all;
+    return all.filter(
+      (e) => e.name.toLowerCase().includes(q) || (e.category ?? "").toLowerCase().includes(q)
+    );
+  }, [entries, query]);
+
+  const groups = useMemo(() => {
+    if (categories.length === 0) {
+      return [{ label: null as string | null, items: filtered }];
+    }
+    const result: { label: string | null; items: LibraryEntry[] }[] = categories.map((c) => ({
+      label: c,
+      items: filtered.filter((e) => e.category === c),
+    }));
+    result.push({ label: "Other", items: filtered.filter((e) => !e.category) });
+    return result.filter((g) => g.items.length > 0);
+  }, [categories, filtered]);
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const entry = await saveSelectedSlidesToLibrary(name);
+      const entry = await saveSelectedSlidesToLibrary(name, category);
       setEntries((prev) => [entry, ...(prev ?? [])]);
       setName("");
+      setCategory("");
       showSaveStatus("Saved ✓");
     } catch (err: unknown) {
       onError(err instanceof Error ? err.message : "Saving to library failed");
@@ -236,6 +308,30 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
     }
   };
 
+  const handleCategoryCommit = async (entry: LibraryEntry, raw: string) => {
+    const next = raw.trim();
+    const current = entry.category ?? "";
+    if (next === current) return;
+    try {
+      await updateEntryCategory(entry.id, next || null);
+      setEntries((prev) =>
+        (prev ?? []).map((e) => {
+          if (e.id !== entry.id) return e;
+          const updated = { ...e };
+          if (next) {
+            updated.category = next;
+          } else {
+            delete updated.category;
+          }
+          return updated;
+        })
+      );
+      showLibStatus("Moved ✓");
+    } catch (err: unknown) {
+      onError(err instanceof Error ? err.message : "Updating category failed");
+    }
+  };
+
   const handleExport = async () => {
     try {
       const count = await exportLibrary();
@@ -262,13 +358,102 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
   const loaded = entries !== null;
   const count = entries?.length ?? 0;
   const countLabel = count > 0 ? `${count} ${count === 1 ? "entry" : "entries"}` : "";
+  const searching = query.trim().length > 0;
+
+  const renderRow = (entry: LibraryEntry) => {
+    const hasThumbs = !!entry.thumbnails?.length;
+    const expanded = expandedId === entry.id;
+    const togglePreview = () => setExpandedId(expanded ? null : entry.id);
+    const previewTitle = expanded ? "Hide details" : hasThumbs ? "Click to preview" : "Click for details";
+    return (
+      <div key={entry.id} className={styles.row}>
+        <div className={styles.rowHeader}>
+          {hasThumbs && (
+            <img
+              className={styles.thumb}
+              src={`data:image/png;base64,${entry.thumbnails![0]}`}
+              alt=""
+              title={previewTitle}
+              onClick={togglePreview}
+            />
+          )}
+          <div className={styles.rowText} title={previewTitle} onClick={togglePreview}>
+            <div className={styles.rowName}>{entry.name}</div>
+            <div className={styles.rowMeta}>
+              {entry.slideCount} slide{entry.slideCount === 1 ? "" : "s"} · {formatSavedDate(entry.savedAt)}
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.insertButton}
+            disabled={busyId !== null}
+            title={`Insert after current slide (${formatting === "KeepSourceFormatting" ? "keep design" : "match deck"})`}
+            onClick={() => handleInsert(entry)}
+          >
+            {busyId === entry.id ? "…" : "Insert"}
+          </button>
+          <button
+            type="button"
+            className={mergeClasses(styles.deleteButton, armedDeleteId === entry.id && styles.deleteArmed)}
+            title={armedDeleteId === entry.id ? "Click again to delete" : `Delete "${entry.name}"`}
+            onClick={() => handleDelete(entry.id)}
+          >
+            <TrashIcon />
+          </button>
+        </div>
+        {expanded && (
+          <div className={styles.previewStrip}>
+            <div className={styles.categoryRow}>
+              <label className={styles.categoryLabel} htmlFor={`ns-cat-${entry.id}`}>
+                Category
+              </label>
+              <input
+                id={`ns-cat-${entry.id}`}
+                className={styles.categoryInput}
+                key={`${entry.id}-${entry.category ?? ""}`}
+                defaultValue={entry.category ?? ""}
+                placeholder="None"
+                list={CATEGORY_DATALIST_ID}
+                onBlur={(e) => handleCategoryCommit(entry, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                }}
+              />
+            </div>
+            {(entry.thumbnails ?? []).map((thumb, i) => (
+              <img
+                key={i}
+                className={styles.previewImage}
+                src={`data:image/png;base64,${thumb}`}
+                alt={`Slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className={styles.root}>
+      <datalist id={CATEGORY_DATALIST_ID}>
+        {categories.map((c) => (
+          <option key={c} value={c} />
+        ))}
+      </datalist>
+
       <div>
         <SectionHeader label="Save to library" right={saveStatus ?? ""} rightColor={tokens.success} />
         <div className={styles.saveColumn}>
           <TextField id="ns-lib-name" label="Entry name" value={name} onChange={setName} />
+          <TextField
+            id="ns-lib-category"
+            label="Category"
+            value={category}
+            onChange={setCategory}
+            placeholder="Optional — e.g. Frameworks"
+            list={CATEGORY_DATALIST_ID}
+          />
           <EmphasizedButton
             height={38}
             onClick={handleSave}
@@ -286,83 +471,36 @@ const LibraryTab: React.FC<{ onError: OnError }> = ({ onError }) => {
           right={libStatus ?? countLabel}
           rightColor={libStatus ? tokens.success : tokens.textDisabled}
         />
-        <SegmentedControl
-          fontSize="12px"
-          options={[
-            { value: "KeepSourceFormatting", label: "Keep design" },
-            { value: "UseDestinationTheme", label: "Match deck" },
-          ]}
-          value={formatting}
-          onChange={setFormatting}
-        />
-        {storageError ? (
-          <div className={styles.storageNote}>{storageError}</div>
-        ) : loaded && count === 0 ? (
-          <div className={styles.note}>No saved slides yet. Select slides in the panel and save them above.</div>
-        ) : (
-          <div className={styles.list}>
-            {(entries ?? []).map((entry) => {
-              const hasThumbs = !!entry.thumbnails?.length;
-              const expanded = expandedId === entry.id;
-              const togglePreview = () => hasThumbs && setExpandedId(expanded ? null : entry.id);
-              const previewTitle = hasThumbs
-                ? expanded
-                  ? "Hide preview"
-                  : "Click to preview"
-                : "No preview available (re-save the slides to capture one)";
-              return (
-                <div key={entry.id} className={styles.row}>
-                  <div className={styles.rowHeader}>
-                    {hasThumbs && (
-                      <img
-                        className={styles.thumb}
-                        src={`data:image/png;base64,${entry.thumbnails![0]}`}
-                        alt=""
-                        title={previewTitle}
-                        onClick={togglePreview}
-                      />
-                    )}
-                    <div className={styles.rowText} title={previewTitle} onClick={togglePreview}>
-                      <div className={styles.rowName}>{entry.name}</div>
-                      <div className={styles.rowMeta}>
-                        {entry.slideCount} slide{entry.slideCount === 1 ? "" : "s"} · {formatSavedDate(entry.savedAt)}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className={styles.insertButton}
-                      disabled={busyId !== null}
-                      title={`Insert after current slide (${formatting === "KeepSourceFormatting" ? "keep design" : "match deck"})`}
-                      onClick={() => handleInsert(entry)}
-                    >
-                      {busyId === entry.id ? "…" : "Insert"}
-                    </button>
-                    <button
-                      type="button"
-                      className={mergeClasses(styles.deleteButton, armedDeleteId === entry.id && styles.deleteArmed)}
-                      title={armedDeleteId === entry.id ? "Click again to delete" : `Delete "${entry.name}"`}
-                      onClick={() => handleDelete(entry.id)}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                  {expanded && hasThumbs && (
-                    <div className={styles.previewStrip}>
-                      {entry.thumbnails!.map((thumb, i) => (
-                        <img
-                          key={i}
-                          className={styles.previewImage}
-                          src={`data:image/png;base64,${thumb}`}
-                          alt={`Slide ${i + 1}`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className={styles.libraryColumn}>
+          {count > 0 && (
+            <TextField id="ns-lib-search" value={query} onChange={setQuery} placeholder="Search library…" />
+          )}
+          <SegmentedControl
+            fontSize="12px"
+            options={[
+              { value: "KeepSourceFormatting", label: "Keep design" },
+              { value: "UseDestinationTheme", label: "Match deck" },
+            ]}
+            value={formatting}
+            onChange={setFormatting}
+          />
+          {storageError ? (
+            <div className={styles.storageNote}>{storageError}</div>
+          ) : loaded && count === 0 ? (
+            <div className={styles.note}>No saved slides yet. Select slides in the panel and save them above.</div>
+          ) : searching && filtered.length === 0 ? (
+            <div className={styles.note}>No matches.</div>
+          ) : (
+            <div className={styles.list}>
+              {groups.map((group) => (
+                <React.Fragment key={group.label ?? "__all"}>
+                  {group.label !== null && <div className={styles.groupHeader}>{group.label}</div>}
+                  {group.items.map(renderRow)}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div>

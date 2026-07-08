@@ -15,6 +15,8 @@ export interface LibraryEntry {
    * Captured at save time — entries saved before this feature have none.
    */
   thumbnails?: string[];
+  /** Free-form category; absent = uncategorized ("Other"). */
+  category?: string;
 }
 
 export type InsertFormatting = "KeepSourceFormatting" | "UseDestinationTheme";
@@ -124,11 +126,12 @@ async function captureSlideThumbnails(slideIds: string[]): Promise<string[]> {
 /**
  * Saves the currently selected slides as a named library entry.
  */
-export async function saveSelectedSlidesToLibrary(name: string): Promise<LibraryEntry> {
+export async function saveSelectedSlidesToLibrary(name: string, category?: string): Promise<LibraryEntry> {
   const trimmed = name.trim();
   if (!trimmed) {
     throw new Error("Enter a name for the library entry first.");
   }
+  const trimmedCategory = category?.trim();
 
   const info = await getSelectedSlideInfo();
   const base64 = await getSelectedSlidesBase64(info.slideIds);
@@ -141,9 +144,30 @@ export async function saveSelectedSlidesToLibrary(name: string): Promise<Library
     slideCount: info.slideIds.length,
     savedAt: Date.now(),
     ...(thumbnails.length > 0 ? { thumbnails } : {}),
+    ...(trimmedCategory ? { category: trimmedCategory } : {}),
   };
   await withStore("readwrite", (store) => store.put(entry));
   return entry;
+}
+
+/**
+ * Sets or clears an entry's category. No-op when the entry is missing.
+ */
+export async function updateEntryCategory(id: string, category: string | null): Promise<void> {
+  const trimmed = category?.trim();
+  await withStore("readwrite", (store) => {
+    const request = store.get(id) as IDBRequest<LibraryEntry | undefined>;
+    request.onsuccess = () => {
+      const entry = request.result;
+      if (!entry) return;
+      if (trimmed) {
+        entry.category = trimmed;
+      } else {
+        delete entry.category;
+      }
+      store.put(entry);
+    };
+  });
 }
 
 export async function listEntries(): Promise<LibraryEntry[]> {
@@ -240,6 +264,7 @@ export async function importLibrary(file: File): Promise<number> {
     if (typeof raw?.name !== "string" || typeof raw?.base64 !== "string" || raw.base64.length === 0) continue;
     const thumbnails =
       Array.isArray(raw.thumbnails) && raw.thumbnails.every((t) => typeof t === "string") ? raw.thumbnails : undefined;
+    const category = typeof raw.category === "string" && raw.category.trim() ? raw.category.trim() : undefined;
     candidates.push({
       id: typeof raw.id === "string" && raw.id ? raw.id : genId(),
       name: raw.name,
@@ -247,6 +272,7 @@ export async function importLibrary(file: File): Promise<number> {
       slideCount: typeof raw.slideCount === "number" && raw.slideCount > 0 ? raw.slideCount : 1,
       savedAt: typeof raw.savedAt === "number" ? raw.savedAt : Date.now(),
       ...(thumbnails && thumbnails.length > 0 ? { thumbnails } : {}),
+      ...(category ? { category } : {}),
     });
   }
   if (candidates.length === 0) {
